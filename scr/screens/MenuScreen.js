@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const menuItems = [
   { id: '1', title: 'Conferência Física', icon: 'list-alt' },
@@ -21,14 +21,34 @@ const handleMenuPress = (title) => {
 
 const fetchData = async (setMenuItems) => {
   try {
-    
+    /*
     const response = await axios.get('https://api.dpworldsantos.com/TsaMenu/Get');
     const data = response.data.map(item => ({
       id: item.id.toString(),
       title: item.title,
       icon: item.icon,
     }));
-    
+    */
+    const token = await AsyncStorage.getItem('userToken');
+    console.log('bla');
+    console.log (token);
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'http://apiinterna.dpworldsantos.com:8100//TsaMenu/Get',
+      headers: { 
+        'Authorization': 'Bearer ' + token
+      }
+    };
+
+    axios.request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
     
     setMenuItems( 
 
