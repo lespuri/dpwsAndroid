@@ -1,7 +1,7 @@
 import { apiRequest } from './apiRequest-services';
 
 export const pesquisar = (container) => {
-  console.log('pesquisa');
+  console.log(container);
   return apiRequest('post', 'TfcConteinerInspecao/Buscar', container);
 };
 

@@ -5,10 +5,19 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-
+import { KDTipo } from '../enum/KDTipo';
 const handleMenuPress = (title, navigation) => {
-  if (title === 'Inspeção de Gate' || title === 'Inspeção de Patio') {
-    navigation.navigate('PesquisarContainer');
+  if (title === 'Inspeção de Gate' ) {
+    const inspecaoData = {
+      tipo: KDTipo.kdInspecaoGate            
+    };
+    navigation.navigate('PesquisarContainer', inspecaoData);
+  }else if (title === 'Inspeção de Patio') {
+    const inspecaoData = {
+      tipo: KDTipo.kdInspecaoPatio            
+    };
+    navigation.navigate('PesquisarContainer', inspecaoData);
+  
   } else {
     Alert.alert('Menu Pressionado', title);
   }
@@ -71,13 +80,14 @@ const fetchData = async (setMenuItems) => {
   }
 };
 
-const renderItem = ({ item , navigation}) => (
-  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title , navigation)} >
-    <Icon name={item.icon} size={40} color="#000" style={styles.icon} />
-    <Text style={styles.title}>{item.title}</Text>
-    <Icon name="" size={20} color="#000" style={styles.settingsIcon} />
+const renderItem = ({ item, navigation }) => (
+  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title, navigation)} >
+    <Icon name={item.icon || 'default-icon'} size={40} color="#000" style={styles.icon} />
+    <Text style={styles.title}>{item.title}</Text>    
   </TouchableOpacity>
 );
+
+
 
 const MenuScreen = () => {
   const [menuItems, setMenuItems] = useState([]);
