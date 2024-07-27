@@ -4,18 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
-const menuItems = [
-  { id: '1', title: 'Conferência Física', icon: 'list-alt' },
-  { id: '2', title: 'Menu Customizado ', icon: 'cog' },
-  { id: '3', title: 'Menu Customizado ', icon: 'cog' },
-  { id: '4', title: 'Menu Customizado ', icon: 'cog' },
-  { id: '5', title: 'Menu Customizado ', icon: 'cog' },
-  { id: '6', title: 'Menu Customizado ', icon: 'cog' },
-];
-
-const handleMenuPress = (title) => {
-  Alert.alert('Menu Pressionado', title);
+const handleMenuPress = (title, navigation) => {
+  if (title === 'Inspeção de Gate' || title === 'Inspeção de Patio') {
+    navigation.navigate('PesquisarContainer');
+  } else {
+    Alert.alert('Menu Pressionado', title);
+  }
 };
 
 
@@ -35,7 +31,7 @@ const fetchData = async (setMenuItems) => {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'http://apiinterna.dpworldsantos.com:8100//TsaMenu/Get',
+      url: 'https://api.dpworldsantos.com/TsaMenu/Get',
       headers: { 
         'Authorization': 'Bearer ' + token
       }
@@ -44,12 +40,21 @@ const fetchData = async (setMenuItems) => {
     axios.request(config)
     .then((response) => {
       console.log(JSON.stringify(response.data));
+
+      setMenuItems(response.data
+      .filter(item => item.NOME === "Inspeção de Gate" || item.NOME === "Inspeção de Patio")
+      .map(item => ({
+        id: item.TSARECURSOID.toString(),
+        title: item.NOME,
+        icon: 'microchip' // Ajuste o ícone conforme necessário
+      })));
+
     })
     .catch((error) => {
       console.log(error);
     });
 
-    
+    /*
     setMenuItems( 
 
       [
@@ -60,14 +65,14 @@ const fetchData = async (setMenuItems) => {
         { id: '5', title: 'Menu Customizado ', icon: 'cog' },
         { id: '6', title: 'Menu Customizado ', icon: 'cog' },
       ]
-    );
+    );*/
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
   }
 };
 
-const renderItem = ({ item }) => (
-  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title)} >
+const renderItem = ({ item , navigation}) => (
+  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title , navigation)} >
     <Icon name={item.icon} size={40} color="#000" style={styles.icon} />
     <Text style={styles.title}>{item.title}</Text>
     <Icon name="" size={20} color="#000" style={styles.settingsIcon} />
@@ -76,6 +81,7 @@ const renderItem = ({ item }) => (
 
 const MenuScreen = () => {
   const [menuItems, setMenuItems] = useState([]);
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchData(setMenuItems);
@@ -84,7 +90,7 @@ const MenuScreen = () => {
     <SafeAreaView style={styles.container}>
       <FlatList
         data={menuItems}
-        renderItem={renderItem}
+        renderItem={({ item }) => renderItem({ item, navigation })}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.listContainer}

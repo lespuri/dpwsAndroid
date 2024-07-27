@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './scr/screens/LoginScreen';
 import MenuScreen from './scr/screens/MenuScreen';
+import PesquisarContainerScreen from './scr/screens/PesquisarContainerScreen';
 import { Image, View, StyleSheet } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +38,7 @@ function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="PesquisarContainer" component={PesquisarContainerScreen} />
         <Stack.Screen 
           name="Menu" 
           component={MenuScreen} 
