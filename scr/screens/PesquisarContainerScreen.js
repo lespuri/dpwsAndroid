@@ -29,6 +29,8 @@ const PesquisarContainerScreen = () => {
 
       const performSearch = async () => {
         try {
+          navigation.navigate('MenuInspecao');
+          /*
           const result = await pesquisar(updatedDto);
           setTfcContainerInspecaoDto(result);
 
@@ -45,6 +47,7 @@ const PesquisarContainerScreen = () => {
           setInspecao(updatedInspecao);
           Alert.alert('Success', 'Container encontrado!');
           navigation.navigate('Menu', updatedInspecao);
+          */
         } catch (ex) {
           //console.error('Erro', ex);
           Alert.alert('Atenção', ex.message);

@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './scr/screens/LoginScreen';
 import MenuScreen from './scr/screens/MenuScreen';
 import PesquisarContainerScreen from './scr/screens/PesquisarContainerScreen';
+import MenuInspecaoScreen from './scr/screens/MenuInspecaoScreen';
 import { Image, View, StyleSheet } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -39,6 +40,7 @@ function App() {
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="PesquisarContainer" component={PesquisarContainerScreen} />
+        <Stack.Screen name="MenuInspecao" component={MenuInspecaoScreen} />
         <Stack.Screen 
           name="Menu" 
           component={MenuScreen} 
