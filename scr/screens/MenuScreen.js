@@ -6,15 +6,30 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { KDTipo } from '../enum/KDTipo';
+import { INSPECAO_CHECKLIST } from '../utils/constants.page';  // Importar a constante
 const handleMenuPress = (title, navigation) => {
   if (title === 'Inspeção de Gate' ) {
     const inspecaoData = {
       tipo: KDTipo.kdInspecaoGate            
     };
+
+    
+    
+    
+    const checklist = INSPECAO_CHECKLIST["kdInspecaoGate"];  // Certifique-se de que TIPO corresponde a uma chave em INSPECAO_CHECKLIST
+    
+    if (checklist) {
+      inspecaoData.checklist = checklist;
+      inspecaoData.checklist.menuL.forEach((eachObj) => {
+        eachObj.isDadosPreenchidos = false;
+      });
+    }
+
+    
     navigation.navigate('PesquisarContainer', inspecaoData);
   }else if (title === 'Inspeção de Patio') {
     const inspecaoData = {
-      tipo: KDTipo.kdInspecaoPatio            
+      tipo: KDTipo.kdInspecaoPatio ,           
     };
     navigation.navigate('PesquisarContainer', inspecaoData);
   
@@ -35,8 +50,7 @@ const fetchData = async (setMenuItems) => {
     }));
     */
     const token = await AsyncStorage.getItem('userToken');
-    console.log('bla');
-    console.log (token);
+        
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
@@ -47,9 +61,7 @@ const fetchData = async (setMenuItems) => {
     };
 
     axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-
+    .then((response) => {      
       setMenuItems(response.data
       .filter(item => item.NOME === "Inspeção de Gate" || item.NOME === "Inspeção de Patio")
       .map(item => ({

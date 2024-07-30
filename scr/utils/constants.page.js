@@ -32,3 +32,25 @@ export const INSPECAO_PAGE_CONFIG = {
   "ServicosExcessoPage": ServicosExcessoPage
   */
 };
+
+export const INSPECAO_CHECKLIST = {
+  kdInspecaoGate: {
+    menuL: [
+      { page: 'GateDadosPage', name: 'Dados do Gate' },
+      { page: 'GateLacresPage', name: 'Lacres do Gate' },
+      { page: 'GateAvariasPage', name: 'Avarias do Gate' },
+      { page: 'GateReeferPage', name: 'Reefer do Gate' },
+      // adicione outras páginas conforme necessário
+    ]
+  },
+  kdInspecaoPatio: {
+    menuL: [
+      { page: 'PatioDadosPage', name: 'Dados do Pátio' },
+      { page: 'PatioLacresPage', name: 'Lacres do Pátio' },
+      { page: 'PatioAvariasPage', name: 'Avarias do Pátio' },
+      { page: 'PatioIMOPage', name: 'IMO do Pátio' },
+      // adicione outras páginas conforme necessário
+    ]
+  },
+  // adicione outros tipos de inspeção conforme necessário
+};

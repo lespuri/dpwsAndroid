@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { pesquisar } from '../services/container-service';
 import { TfcConteinerInspecaoDTO } from '../models/TfcConteinerInspecaoDTO';
 import { Inspecao } from '../models/inspecao.model';
+import { INSPECAO_CHECKLIST } from '../utils/constants.page';  // Importar a constante
 
 const PesquisarContainerScreen = () => {
   const route = useRoute();
@@ -29,25 +30,24 @@ const PesquisarContainerScreen = () => {
 
       const performSearch = async () => {
         try {
-          navigation.navigate('MenuInspecao');
-          /*
-          const result = await pesquisar(updatedDto);
+
+          const result = await pesquisar(updatedDto);          
           setTfcContainerInspecaoDto(result);
 
           const updatedInspecao = {
             ...inspecao,
-            tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result),
-            checklist: INSPECAO_CHECKLIST[inspecao.tipo],
+            tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
+            
           };
-
+          console.log("updatedInspecao", updatedInspecao["checklist"]);
           updatedInspecao.checklist.menuL.forEach((eachObj) => {
             eachObj.isDadosPreenchidos = false;
           });
 
           setInspecao(updatedInspecao);
           Alert.alert('Success', 'Container encontrado!');
-          navigation.navigate('Menu', updatedInspecao);
-          */
+          navigation.navigate('MenuInspecao', updatedInspecao);
+          
         } catch (ex) {
           //console.error('Erro', ex);
           Alert.alert('Atenção', ex.message);
