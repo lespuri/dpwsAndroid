@@ -18,6 +18,7 @@ const PesquisarContainerScreen = () => {
 
   useEffect(() => {
     setModelContainer(inspecao.container || '');
+    
   }, [inspecao]);
 
   useEffect(() => {
@@ -38,14 +39,13 @@ const PesquisarContainerScreen = () => {
             ...inspecao,
             tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
             
-          };
-          console.log("updatedInspecao", updatedInspecao["checklist"]);
+          };          
           updatedInspecao.checklist.menuL.forEach((eachObj) => {
             eachObj.isDadosPreenchidos = false;
           });
 
           setInspecao(updatedInspecao);
-          Alert.alert('Success', 'Container encontrado!');
+          //Alert.alert('Success', 'Container encontrado!');
           navigation.navigate('MenuInspecao', updatedInspecao);
           
         } catch (ex) {
@@ -70,7 +70,7 @@ const PesquisarContainerScreen = () => {
   };
 
   const iniciarInspecao = () => {
-    const novaInspecao = new Inspecao(inspecao.tipo, modelContainer, removerMarcara(modelContainer));
+    const novaInspecao =  inspecaoData;//new Inspecao(inspecao.tipo, modelContainer, removerMarcara(modelContainer));
     setInspecao(novaInspecao);
   };
 

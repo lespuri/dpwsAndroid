@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { apiRequest } from './apiRequest-services';
 
  const mockContainerData = {
@@ -54,5 +55,12 @@ export const mockConteinerServicePesquisar = async () => {
   // Simula um atraso de rede
   await new Promise(resolve => setTimeout(resolve, 1000));
   return mockContainerData;
+};
+
+export const mockConteinerServiceEditar = async (container) => {
+  // Simula um atraso de rede
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return container;
+  
 };
 

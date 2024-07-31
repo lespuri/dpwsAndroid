@@ -1,5 +1,5 @@
 import { apiRequest } from './apiRequest-services';
-import {mockConteinerServicePesquisar } from '../utils/mocados'
+import {mockConteinerServicePesquisar, mockConteinerServiceEditar } from '../utils/mocados'
 
 export const pesquisar = (container) => {
   return  mockConteinerServicePesquisar();
@@ -19,7 +19,9 @@ export const finalizar = (container, reservaJanelaId) => {
 };
 
 export const editar = (container) => {
-  return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
+  console.log("editar", container);
+  return  mockConteinerServiceEditar(container);
+  //return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
 };
 
 export const salvarReefer = (container) => {

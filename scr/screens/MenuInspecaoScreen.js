@@ -16,10 +16,9 @@ const MenuInspecaoScreen = () => {
   const { present, presentErr } = AlertService();
 
   useEffect(() => {
-    const params = route.params;
+    const params = route.params;    
     if (params) {
-      const inspecaoData = params.inspecao;
-      inspecaoData.checklist = INSPECAO_PAGE_CONFIG[inspecaoData.tipo];
+      const inspecaoData = params;      
       setInspecao(inspecaoData);
     }
 
@@ -43,8 +42,9 @@ const MenuInspecaoScreen = () => {
   }, [inspecao]);
 
   const goTo = (menu) => {
+    console.log("menu", menu.page);
     inspecao.checklistSelecionado = menu;
-    navigation.navigate(INSPECAO_PAGE_CONFIG[menu.page], { inspecao });
+    navigation.navigate(menu.page, { inspecao });
   };
 
   const validateGate = () => {

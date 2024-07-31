@@ -36,10 +36,10 @@ export const INSPECAO_PAGE_CONFIG = {
 export const INSPECAO_CHECKLIST = {
   kdInspecaoGate: {
     menuL: [
-      { page: 'GateDadosPage', name: 'Dados do Gate' },
-      { page: 'GateLacresPage', name: 'Lacres do Gate' },
-      { page: 'GateAvariasPage', name: 'Avarias do Gate' },
-      { page: 'GateReeferPage', name: 'Reefer do Gate' },
+      { page: 'GateDados', name: 'Dados do Gate' },
+      { page: 'GateLacres', name: 'Lacres do Gate' },
+      { page: 'GateAvariasScreen', name: 'Avarias do Gate' },
+      { page: 'GateReeferScreen', name: 'Reefer do Gate' },
       // adicione outras páginas conforme necessário
     ]
   },
