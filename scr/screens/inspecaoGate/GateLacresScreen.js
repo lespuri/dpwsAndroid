@@ -1,89 +1,74 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform, PermissionsAndroid } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Alert,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import ImagePicker from 'react-native-image-crop-picker';
-import { ContainerServiceProvider } from '../services/container-service';
-import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 
-const GateLacresScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const [inspecao, setInspecao] = useState(route.params.inspecao);
+const GateLacresScreen = ({ navigation, route }) => {
+  const { inspecao } = route.params;
   const [lacrePrevistoConfirmadoL, setLacrePrevistoConfirmadoL] = useState([]);
   const [outrosLacresL, setOutrosLacresL] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(null);
+  const [cameraVisible, setCameraVisible] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(null);
+  const cameraRef = useRef(null);
+
+  const devices = useCameraDevices();
+  const device = devices.back || devices.find(dev => dev.position === 'back');
 
   useEffect(() => {
     setLacrePrevistoConfirmadoL(inspecao.lacrePrevistoConfirmadoL || []);
     setOutrosLacresL(inspecao.outrosLacresL || []);
-  }, [inspecao]);
+  }, []);
 
-  const requestCameraPermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        {
-          title: "Permissão de Câmera",
-          message: "O aplicativo precisa de acesso à câmera para tirar fotos.",
-          buttonNeutral: "Pergunte-me depois",
-          buttonNegative: "Cancelar",
-          buttonPositive: "OK"
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
+  const goToCamera = (item) => {
+    setCurrentImageIndex(outrosLacresL.indexOf(item));
+    setCameraVisible(true);
   };
 
-  const goToCamera = async (lacre) => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) {
-      Alert.alert("Permissão de câmera negada", "Você precisa conceder permissão para usar a câmera.");
-      return;
-    }
-
-    try {
-      const result = await ImagePicker.openCamera({
-        width: 300,
-        height: 400,
-        cropping: true,
+  const capturePhoto = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePhoto({
+        flash: 'auto',
+        qualityPrioritization: 'balanced',
+        skipMetadata: true,
       });
-
-      if (result) {
-        lacre.imagem = { url: result.path };
-        setOutrosLacresL([...outrosLacresL]);
-      }
-    } catch (error) {
-      console.log('Error opening camera: ', error);
+      console.log("photo.path", photo.path);
+      const updatedLacres = [...outrosLacresL];
+      updatedLacres[currentImageIndex].imagem = { uri: `file://${photo.path}` }; // Prefixar com file://
+      setOutrosLacresL(updatedLacres);
+      setCameraVisible(false);      
     }
   };
 
-  const confirmarLacre = (lacre) => {
-    // Lógica para confirmar lacre
-  };
-
-  const confirmarLacrePrevisto = (lacre) => {
-    // Lógica para confirmar lacre previsto
-  };
-
-  const showModal = (index, url) => {
+  const showModal = (index, imageUrl) => {
     setCurrentImageIndex(index);
-    setCurrentImageUrl(url);
+    setCurrentImageUrl(imageUrl);
     setModalVisible(true);
   };
 
-  const removerImagemLacre = (lacre) => {
-    lacre.imagem = null;
-    setOutrosLacresL([...outrosLacresL]);
+  const removerImagemLacre = (item) => {
+    const updatedLacres = [...lacrePrevistoConfirmadoL];
+    const index = updatedLacres.indexOf(item);
+    updatedLacres[index].imagem = null;
+    setLacrePrevistoConfirmadoL(updatedLacres);
   };
 
-  const removerLacre = (index) => {
+  const removerLacre = (item) => {
     const updatedLacres = [...outrosLacresL];
+    const index = updatedLacres.indexOf(item);
     updatedLacres.splice(index, 1);
     setOutrosLacresL(updatedLacres);
   };
@@ -92,22 +77,80 @@ const GateLacresScreen = () => {
     setOutrosLacresL([...outrosLacresL, { lacre: '', imagem: null }]);
   };
 
-  const goToGateSemLacre = () => {
-    // Lógica para ir para gate sem lacre
+  const handleConfirmarLacre = (item) => {
+    const updatedLacres = lacrePrevistoConfirmadoL.map((lacre) => {
+      if (lacre === item) {
+        lacre.status = lacre.status === 'previsto' ? 'confirmado' : 'previsto';
+      }
+      return lacre;
+    });
+    setLacrePrevistoConfirmadoL(updatedLacres);
   };
 
-  const isSemLacre = () => {
-    return inspecao.tfcConteinerFinalizarInspecaoDTO &&
-      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO &&
-      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE === 1;
+  const handleFinalizarLacre = async () => {
+    try {
+      const lacreConfirmadoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "confirmado");
+      const lacrePrevistoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "previsto");
+
+      if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE && lacreConfirmadoL.length === 0 && outrosLacresL.length === 0) {
+        Alert.alert("Atenção", "Confirme ou preencha um Lacre");
+        return;
+      } else if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE && !isLacreValido()) {
+        Alert.alert("Atenção", "Prencha o número dos Lacres que estão com foto");
+        return;
+      }
+
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.CONFIRMADOS = lacreConfirmadoL.map(lacre => lacre.lacre).join(",");
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NOVOS = outrosLacresL.map(lacre => lacre.lacre).join(",");
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
+
+      await ContainerServiceProvider.salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+      await uploadFiles();
+    } catch (err) {
+      console.log("ERRO", err);
+      Alert.alert("Atenção", err.message);
+    }
   };
 
-  const removerSemLacre = () => {
-    // Lógica para remover sem lacre
+  const isLacreValido = () => {
+    return outrosLacresL.every(element => element.lacre || !isLacreImagem(element));
   };
 
-  const finalizarLacre = () => {
-    // Lógica para finalizar lacre
+  const isLacreImagem = (lacre) => {
+    return lacre.imagem && lacre.imagem.uri;
+  };
+
+  const uploadFiles = async () => {
+    try {
+      let isOccurredError = false;
+      let isHasImage = false;
+      const imagemUploadL = [...outrosLacresL, ...getLacreConfirmado()];
+
+      for (const lacre of imagemUploadL) {
+        if (isLacreImagem(lacre)) {
+          isHasImage = true;
+          try {
+            await uploadImagem(inspecao.tfcContainerInspecaoDto, lacre.lacre, lacre.imagem);
+          } catch (err) {
+            isOccurredError = true;
+            console.log("uploadImagem ERRO", err);
+            Alert.alert("Atenção", err.message);
+            break;
+          }
+        }
+      }
+
+      if (!isOccurredError) {
+        navigation.navigate('MenuInspecaoScreen', { inspecao });
+      }
+    } catch (err) {
+      console.log("ERRO", err);
+      Alert.alert("Atenção", err.message);
+    }
+  };
+
+  const getLacreConfirmado = () => {
+    return lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "confirmado");
   };
 
   return (
@@ -128,19 +171,19 @@ const GateLacresScreen = () => {
               <Text style={styles.label}>{`LACRE ${item.status.toUpperCase()} (${index + 1})`}</Text>
               <TextInput style={styles.input} value={item.lacre} editable={false} />
               {item.status === 'previsto' ? (
-                <Icon name="check-circle" size={24} color="orange" onPress={() => confirmarLacre(item)} />
+                <Icon name="check-circle" size={24} color="orange" onPress={() => handleConfirmarLacre(item)} />
               ) : (
-                <Icon name="close" size={24} color="red" onPress={() => confirmarLacrePrevisto(item)} />
+                <Icon name="close" size={24} color="red" onPress={() => handleConfirmarLacrePrevisto(item)} />
               )}
-              {!item.imagem?.url && (
+              {!item.imagem?.uri && (
                 <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item)} />
               )}
-              {item.imagem?.url && (
-                <TouchableOpacity onPress={() => showModal(index, item.imagem.url)}>
-                  <Image source={{ uri: item.imagem.url }} style={styles.image} />
+              {item.imagem?.uri && (
+                <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>
+                  <Image source={{ uri: item.imagem.uri }} style={styles.image} />
                 </TouchableOpacity>
               )}
-              {item.imagem?.url && (
+              {item.imagem?.uri && (
                 <TouchableOpacity onPress={() => removerImagemLacre(item)}>
                   <Icon name="close" size={24} color="red" />
                 </TouchableOpacity>
@@ -153,7 +196,7 @@ const GateLacresScreen = () => {
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <View key={index} style={styles.item}>
-              <Text style={styles.label}>{`OUTRO LACRE (${index + 1})`}</Text>
+              <Text style={styles.label}>OUTRO LACRE</Text>
               <TextInput
                 style={styles.input}
                 value={item.lacre}
@@ -163,55 +206,62 @@ const GateLacresScreen = () => {
                   setOutrosLacresL(updatedLacres);
                 }}
               />
-              {!item.imagem?.url && (
+              {!item.imagem?.uri && (
                 <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item)} />
               )}
-              {item.imagem?.url && (
-                <TouchableOpacity onPress={() => showModal(index, item.imagem.url)}>
-                  <Image source={{ uri: item.imagem.url }} style={styles.image} />
+              {item.imagem?.uri && (
+                <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>
+                  <Image source={{ uri: item.imagem.uri }} style={styles.image} />
                 </TouchableOpacity>
               )}
-              {item.imagem?.url && (
-                <TouchableOpacity onPress={() => removerLacre(index)}>
+              {item.imagem?.uri && (
+                <TouchableOpacity onPress={() => removerLacre(item)}>
                   <Icon name="close" size={24} color="red" />
                 </TouchableOpacity>
               )}
             </View>
           )}
         />
+        <TouchableOpacity style={styles.button} onPress={adicionarOutroLacre}>
+          <Text style={styles.buttonText}>Adicionar Lacre</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={adicionarOutroLacre}>
-        <Text style={styles.buttonText}>Adicionar Outro Lacre</Text>
+      <TouchableOpacity style={styles.finalizarButton} onPress={handleFinalizarLacre}>
+        <Text style={styles.finalizarButtonText}>Finalizar</Text>
       </TouchableOpacity>
 
-      {isSemLacre() && (
-        <TouchableOpacity style={styles.button} onPress={goToGateSemLacre}>
-          <Text style={styles.buttonText}>Sem Lacre</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity style={styles.button} onPress={finalizarLacre}>
-        <Text style={styles.buttonText}>Confirmar</Text>
-        <Icon name="arrow-right" size={20} color="#fff" />
-      </TouchableOpacity>
-
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            {currentImageUrl && (
-              <Image source={{ uri: currentImageUrl }} style={styles.modalImage} />
+      {cameraVisible && (
+        <Modal animationType="slide" transparent={true} visible={cameraVisible}>
+          <View style={styles.cameraContainer}>
+            {device && (
+              <Camera
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                isActive={cameraVisible}
+                photo
+              />
             )}
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalCloseButtonText}>Fechar</Text>
+            <TouchableOpacity style={styles.captureButton} onPress={capturePhoto}>
+              <Text style={styles.captureButtonText}>Capturar</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
+
+      {modalVisible && (
+        <Modal animationType="slide" transparent={true} visible={modalVisible}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Image source={{ uri: currentImageUrl }} style={styles.modalImage} />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalCloseButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -219,8 +269,8 @@ const GateLacresScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    padding: 16,
   },
   header: {
     marginBottom: 16,
@@ -228,48 +278,56 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#666',
+    fontSize: 18,
   },
   form: {
     flex: 1,
   },
   item: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   label: {
+    flex: 1,
     fontSize: 16,
-    marginBottom: 4,
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    flex: 2,
     borderWidth: 1,
-    paddingHorizontal: 8,
-    marginBottom: 4,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+    marginRight: 8,
   },
   image: {
-    width: 100,
-    height: 100,
-    resizeMode: 'cover',
+    width: 50,
+    height: 50,
+    marginRight: 8,
   },
   button: {
     backgroundColor: '#022E69',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
     marginTop: 16,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    marginRight: 8,
+  },
+  finalizarButton: {
+    backgroundColor: '#022E69',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  finalizarButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   modalOverlay: {
     flex: 1,
@@ -283,12 +341,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
   },
-  modalImage: {
-    width: '100%',
-    height: 400,
-    resizeMode: 'contain',
-    marginBottom: 16,
-  },
   modalCloseButton: {
     backgroundColor: '#022E69',
     padding: 10,
@@ -297,6 +349,32 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   modalCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalImage: {
+    width: '100%',
+    height: 400,
+    resizeMode: 'contain',
+    marginBottom: 16,
+  },
+  cameraContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  captureButton: {
+    position: 'absolute',
+    bottom: 30,
+    left: '50%',
+    transform: [{ translateX: -50 }],
+    backgroundColor: '#022E69',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  captureButtonText: {
     color: '#fff',
     fontSize: 16,
   },

@@ -2,6 +2,7 @@ import { apiRequest } from './apiRequest-services';
 import {mockConteinerServicePesquisar, mockConteinerServiceEditar } from '../utils/mocados'
 
 export const pesquisar = (container) => {
+  console.log("container pesquisa", container);
   return  mockConteinerServicePesquisar();
   //return apiRequest('post', 'TfcConteinerInspecao/Buscar', container);
 };
