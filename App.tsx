@@ -7,8 +7,10 @@ import PesquisarContainerScreen from './scr/screens/PesquisarContainerScreen';
 import MenuInspecaoScreen from './scr/screens/MenuInspecaoScreen';
 import GateDadosScreen from './scr/screens/inspecaoGate/GateDadosScreen';
 import GateLacresScreen from './scr/screens/inspecaoGate/GateLacresScreen';
+import GateAvariaScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
 
 import { Image, View, StyleSheet } from 'react-native';
+import GateAvariasScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +48,7 @@ function App() {
         <Stack.Screen name="MenuInspecao" component={MenuInspecaoScreen} />
         <Stack.Screen name="GateDados" component={GateDadosScreen} />
         <Stack.Screen name="GateLacres" component={GateLacresScreen} />        
+        <Stack.Screen name="GateAvarias" component={GateAvariasScreen} />        
         <Stack.Screen 
           name="Menu" 
           component={MenuScreen} 

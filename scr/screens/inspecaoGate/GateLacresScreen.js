@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
-
+import {salvar} from '../../services/container-service'
+import {buscarLacre, buscarDadosCompletoLacre, uploadImagem} from '../../services/lacre-service'
 const GateLacresScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
   const [lacrePrevistoConfirmadoL, setLacrePrevistoConfirmadoL] = useState([]);
@@ -31,7 +32,108 @@ const GateLacresScreen = ({ navigation, route }) => {
   useEffect(() => {
     setLacrePrevistoConfirmadoL(inspecao.lacrePrevistoConfirmadoL || []);
     setOutrosLacresL(inspecao.outrosLacresL || []);
+    buscarDadosApi();
   }, []);
+
+  const buscarDadosApi = async () => {
+    try {
+      const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
+      let lacresColocados = "";
+
+      if (inspecao.tfcConteinerFinalizarInspecaoDTO != null && inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO != null && inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.COLOCADOS) {
+        lacresColocados = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.COLOCADOS;
+      }
+
+      inspecao.tfcConteinerFinalizarInspecaoDTO = { ...result };
+
+      if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO) {
+        inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO = {};
+      }
+
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.COLOCADOS = lacresColocados;
+
+      prepararDadosLocal();
+    } catch (err) {
+      console.error("ERRO", err);
+      Alert.alert("Atenção", "Erro ao buscar dados da API.");
+    }
+  };
+
+  const prepararDadosLocal = () => {
+    let outrosLacresL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NOVOS.split(",");
+    outrosLacresL = outrosLacresL.filter(element => element !== "");
+
+    outrosLacresL.forEach(element => {
+      setOutrosLacresL(prevLacres => [...prevLacres, { lacre: element, imagem: {} }]);
+    });
+
+    // Adicionando 5 itens em branco para visualizar os outros lacres
+    let outrosLacresQtd = 4 - outrosLacresL.length;
+    for (let i = 0; i < outrosLacresQtd; i++) {
+      adicionarOutroLacre();
+    }
+
+    let lacreConfirmadoL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.CONFIRMADOS.split(",");
+    lacreConfirmadoL = lacreConfirmadoL.filter(element => element !== "");
+
+    lacreConfirmadoL.forEach(element => {
+      setLacrePrevistoConfirmadoL(prevLacres => [...prevLacres, { lacre: element, status: "confirmado", imagem: {} }]);
+    });
+
+    let previstosL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.PREVISTOS.split(",");
+    previstosL = previstosL.filter(element => element !== "");
+
+    lacrePrevistoConfirmadoL.forEach(lacrePrevisto => {
+      let index = previstosL.indexOf(lacrePrevisto.lacre);
+      if (index !== -1) {
+        previstosL.splice(index, 1);
+      }
+    });
+
+    previstosL.forEach(lacre => {
+      setLacrePrevistoConfirmadoL(prevLacres => [...prevLacres, { lacre, status: "previsto", imagem: {} }]);
+    });
+
+    buscarDadosCompletoApi();
+  };
+
+  const buscarDadosCompletoApi = async () => {
+    try {
+      
+        const result = await buscarDadosCompletoLacre(inspecao.tfcContainerInspecaoDto);
+      const lacreL = [...result];
+
+      lacreL.forEach(lacre => {
+        outrosLacresL.forEach(lacreOutro => {
+          buscarImagemApi(lacre, lacreOutro);
+        });
+
+        getLacreConfirmado().forEach(lacreConfirmado => {
+          buscarImagemApi(lacre, lacreConfirmado);
+        });
+      });
+    } catch (err) {
+      console.error("ERRO", err);
+      Alert.alert("Atenção", "Erro ao buscar dados completos da API.");
+    }
+  };
+
+  const buscarImagemApi = async (lacreCompleto, lacreBusca) => {
+    if (lacreCompleto.NUMERO === lacreBusca.lacre) {
+      try {
+        const resultImagem = await LacreServiceProvider.buscarImagem(lacreCompleto);
+        let imagem = { ...resultImagem };
+
+        if (imagem && imagem.CAMINHO) {
+          lacreBusca.imagem = { uri: imagem.CAMINHO };
+        }
+      } catch (err) {
+        console.error("ERRO", err);
+        Alert.alert("Atenção", "Erro ao buscar imagem da API.");
+      }
+    }
+  };
+
 
   const goToCamera = (item) => {
     setCurrentImageIndex(outrosLacresL.indexOf(item));
@@ -91,7 +193,7 @@ const GateLacresScreen = ({ navigation, route }) => {
     try {
       const lacreConfirmadoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "confirmado");
       const lacrePrevistoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "previsto");
-
+        
       if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE && lacreConfirmadoL.length === 0 && outrosLacresL.length === 0) {
         Alert.alert("Atenção", "Confirme ou preencha um Lacre");
         return;
@@ -104,7 +206,7 @@ const GateLacresScreen = ({ navigation, route }) => {
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NOVOS = outrosLacresL.map(lacre => lacre.lacre).join(",");
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
 
-      await ContainerServiceProvider.salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+      await salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
       await uploadFiles();
     } catch (err) {
       console.log("ERRO", err);
@@ -141,7 +243,7 @@ const GateLacresScreen = ({ navigation, route }) => {
       }
 
       if (!isOccurredError) {
-        navigation.navigate('MenuInspecaoScreen', { inspecao });
+        navigation.navigate('MenuInspecao', { inspecao });
       }
     } catch (err) {
       console.log("ERRO", err);

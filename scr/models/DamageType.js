@@ -1,5 +1,6 @@
 export class DamageType {
     constructor(id, description, damageReport) {
+      
       this.GKEY = null;
       this.ID = id;
       this.REFERENCE_SET = null;

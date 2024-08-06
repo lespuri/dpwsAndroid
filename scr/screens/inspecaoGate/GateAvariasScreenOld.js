@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
   Switch,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -281,146 +282,108 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-
-      <View style={styles.header}>
-        <Text style={styles.title}>{inspecao.tfcContainerInspecaoDto.NROCONTEINER}</Text>
-        <Text style={styles.subtitle}>
-          {inspecao.tfcContainerInspecaoDto.SIGLAMODALIDADE} {inspecao.tfcContainerInspecaoDto.SIGLAFREIGHTKIND}
-        </Text>        
-        <Text style={styles.subtitle}>{inspecao.checklistSelecionado.name}</Text>
-        <Text style={styles.subtitle}>{inspecao.tfcContainerInspecaoDto.TRA}</Text>
-      </View>
-      <FlatList
-        data={tfcConteinerInspecaoAvariaL}
-        keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={
-          <View style={styles.form}>
-            <View style={styles.toggleContainer}>
-              <Text style={styles.label}>DAMAGE REPORT</Text>
-              <Switch
-                value={isDemageReport}
-                onValueChange={(value) => setIsDemageReport(value)}
-              />
-            </View>
-
-            <View style={styles.dropdown}>
-              <SelectDropdown
-                data={tipoL}
-                onSelect={(selectedItem, index) => {
-                  setTipoSelecionado(selectedItem);
-                  console.log(selectedItem, index);
-                }}
-                renderButton={(selectedItem, isOpened) => {
-                  return (
-                    <View style={styles.dropdownButtonStyle}>
-                      <Text style={styles.dropdownButtonTxtStyle}>
-                        {(selectedItem && selectedItem.IDDESCRIPTION) || 'Selecionar Tipo'}
-                      </Text>
-                      <Icon name={isOpened ? 'chevron-up' : 'chevron-down'} style={styles.dropdownButtonArrowStyle} />
-                    </View>
-                  );
-                }}
-                renderItem={(item, index, isSelected) => {
-                  return (
-                    <View style={{ ...styles.dropdownItemStyle, ...(isSelected && { backgroundColor: '#D2D9DF' }) }}>
-                      <Text style={styles.dropdownItemTxtStyle}>{item.IDDESCRIPTION}</Text>
-                    </View>
-                  );
-                }}
-                search
-                searchInputStyle={styles.searchInput}
-                searchPlaceHolder="Buscar..."
-                searchPlaceHolderColor="#999"
-                showsVerticalScrollIndicator={false}
-                dropdownStyle={styles.dropdownMenuStyle}
-              />
-            </View>
-
-            <View style={styles.dropdown}>
-              <SelectDropdown
-                data={componenteL}
-                onSelect={(selectedItem, index) => {
-                  setComponenteSelecionado(selectedItem);
-                  console.log(selectedItem, index);
-                }}
-                renderButton={(selectedItem, isOpened) => {
-                  return (
-                    <View style={styles.dropdownButtonStyle}>
-                      <Text style={styles.dropdownButtonTxtStyle}>
-                        {(selectedItem && selectedItem.IDDESCRIPTION) || 'Selecionar Componente'}
-                      </Text>
-                      <Icon name={isOpened ? 'chevron-up' : 'chevron-down'} style={styles.dropdownButtonArrowStyle} />
-                    </View>
-                  );
-                }}
-                renderItem={(item, index, isSelected) => {
-                  return (
-                    <View style={{ ...styles.dropdownItemStyle, ...(isSelected && { backgroundColor: '#D2D9DF' }) }}>
-                      <Text style={styles.dropdownItemTxtStyle}>{item.IDDESCRIPTION}</Text>
-                    </View>
-                  );
-                }}
-                showsVerticalScrollIndicator={false}
-                dropdownStyle={styles.dropdownMenuStyle}
-              />
-            </View>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={goToCamera}>
-                <Text style={styles.buttonText}>Adicionar Imagem</Text>
-                <Icon name="camera" size={24} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={() => adicionarAvaria()}>
-                <Text style={styles.buttonText}>Adicionar Avaria</Text>
-                <Icon name="plus" size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            {imageNovaL && imageNovaL.length > 0 && (
-              <View style={styles.imageGrid}>
-                {imageNovaL.map((imagem, index) => (
-                  <View key={index} style={styles.imageContainer}>
-                    <TouchableOpacity onPress={() => showModal(index, imagem.uri)}>
-                      <Image source={{ uri: imagem.uri }} style={styles.image} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.removeButton} onPress={() => removePhoto(index)}>
-                      <Icon name="minus-circle" size={20} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <View key={index} style={styles.avariaItem}>
-            <View style={styles.avariaTextContainer}>
-              <Text style={styles.avariaTitle}>{`${item.TIPO} - ${item.TIPODESCRICAO}`}</Text>
-              <Text style={styles.avariaDescription}>{`${item.COMPONENTE} - ${item.COMPONENTEDESCRICAO}`}</Text>
-            </View>
-            <TouchableOpacity onPress={() => removerAvaria(item)}>
-              <Icon name="close" size={24} color="red" style={styles.avariaIcon} />
-            </TouchableOpacity>
-            {item.imagemL && item.imagemL.length > 0 && (
-              <View style={styles.imageGrid}>
-                {item.imagemL.map((imagem, index) => (
-                  <TouchableOpacity key={index} onPress={() => showModal(index, imagem.url)}>
-                    <Image source={{ uri: imagem.url }} style={styles.image} />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-        ListFooterComponent={
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.finalizarButton} onPress={() => finalizarAvaria(true)}>
-              <Text style={styles.finalizarButtonText}>Confirmar</Text>
-              <Icon name="forward" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        }
+      <PageGateHeader
+        conteiner={inspecao.tfcContainerInspecaoDto.NROCONTEINER}
+        modalidade={inspecao.tfcContainerInspecaoDto.SIGLAMODALIDADE}
+        freightkind={inspecao.tfcContainerInspecaoDto.SIGLAFREIGHTKIND}
+        tra={inspecao.tfcContainerInspecaoDto.TRA}
+        checklist={inspecao.checklistSelecionado.name}
+        inspecao={inspecao}
       />
+
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.form}>
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>DAMAGE REPORT</Text>
+            <Switch
+              value={isDemageReport}
+              onValueChange={(value) => setIsDemageReport(value)}
+            />
+          </View>
+
+          {imageNovaL && imageNovaL.length > 0 && (
+            <View style={styles.imageGrid}>
+              {imageNovaL.map((imagem, index) => (
+                <View key={index} style={styles.imageContainer}>
+                  <TouchableOpacity onPress={() => showModal(index, imagem.uri)}>
+                    <Image source={{ uri: imagem.uri }} style={styles.image} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.removeButton} onPress={() => removePhoto(index)}>
+                    <Icon name="minus-circle" size={20} color="red" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.dropdown}>
+            <SelectDropdown
+              data={tipoL}
+              onSelect={(selectedItem) => setTipoSelecionado(selectedItem)}
+              defaultButtonText="Selecionar Tipo"
+              buttonTextAfterSelection={(selectedItem) => selectedItem.IDDESCRIPTION}
+              rowTextForSelection={(item) => item.IDDESCRIPTION}
+            />
+          </View>
+
+          <View style={styles.dropdown}>
+            <SelectDropdown
+              data={componenteL}
+              onSelect={(selectedItem) => setComponenteSelecionado(selectedItem)}
+              defaultButtonText="Selecionar Componente"
+              buttonTextAfterSelection={(selectedItem) => selectedItem.IDDESCRIPTION}
+              rowTextForSelection={(item) => item.IDDESCRIPTION}
+            />
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={goToCamera}>
+              <Text style={styles.buttonText}>Fotos</Text>
+              <Icon name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => adicionarAvaria()}>
+              <Text style={styles.buttonText}>Adicionar</Text>
+              <Icon name="plus" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {tfcConteinerInspecaoAvariaL.length > 0 && (
+            <>
+              <Text style={styles.subTitle}>Avarias Adicionadas</Text>
+              <View style={styles.separator} />
+              <FlatList
+                data={tfcConteinerInspecaoAvariaL}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index }) => (
+                  <View key={index} style={styles.avariaItem}>
+                    <Text style={styles.avariaTitle}>{`${item.TIPO} - ${item.TIPODESCRICAO}`}</Text>
+                    <Text style={styles.avariaDescription}>{`${item.COMPONENTE} - ${item.COMPONENTEDESCRICAO}`}</Text>
+                    <TouchableOpacity onPress={() => removerAvaria(item)}>
+                      <Icon name="close" size={24} color="red" />
+                    </TouchableOpacity>
+                    {item.imagemL && item.imagemL.length > 0 && (
+                      <View style={styles.imageGrid}>
+                        {item.imagemL.map((imagem, index) => (
+                          <TouchableOpacity key={index} onPress={() => showModal(index, imagem.url)}>
+                            <Image source={{ uri: imagem.url }} style={styles.image} />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+              />
+            </>
+          )}
+        </View>
+
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.finalizarButton} onPress={() => finalizarAvaria(true)}>
+            <Text style={styles.finalizarButtonText}>Confirmar</Text>
+            <Icon name="forward" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {cameraVisible && (
         <Modal animationType="slide" transparent={true} visible={cameraVisible}>
@@ -461,19 +424,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#666',
   },
   content: {
     padding: 16,
@@ -544,14 +494,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   avariaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 16,
-    padding: 10
-  },
-  avariaTextContainer: {
-    flex: 1,
   },
   avariaTitle: {
     fontSize: 16,
@@ -560,9 +503,6 @@ const styles = StyleSheet.create({
   avariaDescription: {
     fontSize: 14,
     color: '#555',
-  },
-  avariaIcon: {
-    marginLeft: 8,
   },
   footer: {
     padding: 16,
@@ -629,38 +569,6 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     color: '#fff',
     fontSize: 16,
-  },
-  dropdownButtonStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#eee',
-    borderRadius: 5,
-  },
-  dropdownButtonTxtStyle: {
-    flex: 1,
-    fontSize: 16,
-  },
-  dropdownButtonArrowStyle: {
-    fontSize: 16,
-  },
-  dropdownItemStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-  },
-  dropdownItemTxtStyle: {
-    flex: 1,
-    fontSize: 16,
-  },
-  dropdownMenuStyle: {
-    borderRadius: 5,
-  },
-  searchInput: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
   },
 });
 

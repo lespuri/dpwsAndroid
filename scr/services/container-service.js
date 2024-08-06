@@ -12,7 +12,9 @@ export const iniciarGate = (container) => {
 };
 
 export const salvar = (container) => {
-  return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);
+  console.log(container);
+  return true;
+  //return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);
 };
 
 export const finalizar = (container, reservaJanelaId) => {
