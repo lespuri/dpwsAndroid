@@ -1704,6 +1704,88 @@ const mockTfcConteinerInspecaoLacreResumoBuscar = {
   "aCoMessageList": []
 };
 
+const mockTfcConteinerInspecaoLacreResumoBuscarColocadoData = {
+  "aCoEntity": null,
+  "alsUpdate": [],
+  "TFCCONTEINERINSPECAOID": 0.0,
+  "TFCCONTEINERINSPECAODTO": {
+      "aCoEntity": null,
+      "alsUpdate": [],
+      "TFCCONTEINERINSPECAOID": 0.0,
+      "TFCCONTEINERINSPECAORIID": null,
+      "TFCCONTEINEROPERACAOID": null,
+      "TFCCONTEINERGMPREVISAOID": null,
+      "EXTERNALID": null,
+      "NROCONTEINER": "",
+      "CODIGOISO": null,
+      "CEALTURA": null,
+      "CEDIREITA": null,
+      "CEESQUERDA": null,
+      "CEFRONTAL": null,
+      "CESETTING": null,
+      "CETRASEIRO": null,
+      "CEVENTILACAO": null,
+      "GENSET": "",
+      "OCORRENCIA": "0001-01-01T00:00:00",
+      "OCORRENCIA_STRING": null,
+      "SAFEWEIGHT": null,
+      "TARA": null,
+      "TIPO": 0,
+      "TIPO_DESCRIPTION": null,
+      "LONGARINA": null,
+      "SEMLACRE": null,
+      "TRA": "",
+      "FREIGHTKIND": "",
+      "MODALIDADE": "",
+      "SIGLAMODALIDADE": "",
+      "SIGLAFREIGHTKIND": "",
+      "FINALIZADO": null,
+      "FINALIZADO_STRING": null,
+      "SIGLATIPODOCUMENTO": null,
+      "TEMPO_TRANSACAO": null,
+      "USUARIO": "",
+      "DAMAGEREPORT": null,
+      "CPFMOTORISTA": null,
+      "REMOTORISTA": null,
+      "LANE": null,
+      "ITVTRANSFERENCIA": null,
+      "ITV": null,
+      "TIPOENUM": 0,
+      "LONGARINAENUM": null,
+      "PLACADANIFICADA": false,
+      "TFCVEICULOID": 0.0,
+      "ISIMO": 0.0,
+      "ISTRANSFERENCIA": 0,
+      "NextAction": "",
+      "PrevAction": "",
+      "ActionReferenceId": 0.0,
+      "_IOP": false,
+      "UID": 0.0,
+      "aCoMessageList": []
+  },
+  "OBSERVACAO": "",
+  "PREVISTOS": "",
+  "CONFIRMADOS": "",
+  "NOVOS": "",
+  "COLOCADOS": "",
+  "CONFIRMALACRECOLOCADO": false,
+  "INSPECAOFINALIZADA": false,
+  "SEMLACRE": null,
+  "PREENCHERLACREEMBRAPORT": false,
+  "LACREEMBRAPORT": null,
+  "OBSERVACOES": [],
+  "NextAction": "",
+  "PrevAction": "",
+  "ActionReferenceId": 0.0,
+  "UID": 0.0,
+  "aCoMessageList": []
+};
+
+export const mockBuscarLacreColocado = async (container) => {
+  // Simula um atraso de rede
+  await new Promise(resolve => setTimeout(resolve, 1000));  
+  return mockTfcConteinerInspecaoLacreResumoBuscarColocadoData;
+};
 
 export const mockConteinerServicePesquisar = async () => {
   // Simula um atraso de rede

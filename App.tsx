@@ -8,6 +8,7 @@ import MenuInspecaoScreen from './scr/screens/MenuInspecaoScreen';
 import GateDadosScreen from './scr/screens/inspecaoGate/GateDadosScreen';
 import GateLacresScreen from './scr/screens/inspecaoGate/GateLacresScreen';
 import GateAvariaScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
+import GateLacresColocadosScreen from './scr/screens/inspecaoGate/GateLacresColocadosScreen';
 
 import { Image, View, StyleSheet } from 'react-native';
 import GateAvariasScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
@@ -49,6 +50,7 @@ function App() {
         <Stack.Screen name="GateDados" component={GateDadosScreen} />
         <Stack.Screen name="GateLacres" component={GateLacresScreen} />        
         <Stack.Screen name="GateAvarias" component={GateAvariasScreen} />        
+        <Stack.Screen name="GateLacresColocados" component={GateLacresColocadosScreen} />
         <Stack.Screen 
           name="Menu" 
           component={MenuScreen} 
