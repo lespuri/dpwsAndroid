@@ -12,11 +12,25 @@ export const iniciarGate = (container) => {
 };
 
 export const salvar = (container) => {
+  return new Promise((resolve, reject) => {
+    // lógica para salvar os dados
+    // ...
+    console.log(container);
+    //return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);
+    // Sucesso
+    resolve();
+
+    // Ou, em caso de erro
+    // reject(new Error("Erro ao salvar os dados"));
+  });
+};
+/*
+export const salvar = (container) => {
   console.log(container);
   return true;
   //return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);
 };
-
+*/
 export const finalizar = (container, reservaJanelaId) => {
   return apiRequest('post', `TfcConteinerInspecao/Finalizar?reservaJanelaId=${reservaJanelaId}`, container);
 };

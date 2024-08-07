@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from 'react-native-select-dropdown';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import PageGateHeader from './GateHeaderScreen';
-import ContainerServiceProvider from '../../services/container-service';
+import {salvar } from '../../services/container-service';
 import { buscarLacre } from '../../services/lacre-service';
 import { buscarAvaria } from '../../services/avarias-service';
 import AlertProvider from '../../services/Alert';
@@ -209,7 +209,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
       } else {
         presentLoading();
 
-        ContainerServiceProvider.salvar(inspecao.tfcConteinerFinalizarInspecaoDTO)
+        salvar(inspecao.tfcConteinerFinalizarInspecaoDTO)
           .then(() => uploadFile())
           .catch(err => {
             console.log("ERRO", err);
@@ -276,7 +276,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   };
 
   const navegarProximaEtapa = () => {
-    navigation.navigate('MenuPage', { inspecao });
+    navigation.navigate('MenuInspecao', { inspecao });
   };
 
   return (
