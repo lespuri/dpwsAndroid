@@ -9,6 +9,9 @@ import GateDadosScreen from './scr/screens/inspecaoGate/GateDadosScreen';
 import GateLacresScreen from './scr/screens/inspecaoGate/GateLacresScreen';
 import GateAvariaScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
 import GateLacresColocadosScreen from './scr/screens/inspecaoGate/GateLacresColocadosScreen';
+import GateReeferScreen from './scr/screens/inspecaoGate/GateReeferScreen';
+import ServicoExcessoScreen from './scr/screens/servicos/ServicoExcessoScreen';
+import GateServicosScreen from './scr/screens/inspecaoGate/GateServicosScreen';
 
 import { Image, View, StyleSheet } from 'react-native';
 import GateAvariasScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
@@ -50,7 +53,11 @@ function App() {
         <Stack.Screen name="GateDados" component={GateDadosScreen} />
         <Stack.Screen name="GateLacres" component={GateLacresScreen} />        
         <Stack.Screen name="GateAvarias" component={GateAvariasScreen} />        
-        <Stack.Screen name="GateLacresColocados" component={GateLacresColocadosScreen} />
+        <Stack.Screen name="GateLacresColocados" component={GateLacresColocadosScreen} />        
+        <Stack.Screen name="GateReefer" component={GateReeferScreen} />
+        <Stack.Screen name="ServicoExcesso" component={ServicoExcessoScreen} />
+        <Stack.Screen name="GateServicos" component={GateServicosScreen} />
+        
         <Stack.Screen 
           name="Menu" 
           component={MenuScreen} 

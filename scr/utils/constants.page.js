@@ -41,9 +41,9 @@ export const INSPECAO_CHECKLIST = {
       { page: 'GateLacres', name: 'Lacres do Gate' },
       { page: 'GateLacresColocados', name: 'Lacres Colocados' },
       { page: 'GateAvarias', name: 'Avarias do Gate' },
-      { page: 'GateReeferScreen', name: 'Reefer do Gate' },
-      { page: 'GateExcessoScreen', name: 'Excesso' },
-      { page: 'GateServicosScreen', name: 'Serviços' }
+      { page: 'GateReefer', name: 'Reefer do Gate' },
+      { page: 'ServicoExcesso', name: 'Excesso' },
+      { page: 'GateServicos', name: 'Serviços' }
       // adicione outras páginas conforme necessário
     ]
   },

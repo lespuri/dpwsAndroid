@@ -1781,6 +1781,46 @@ const mockTfcConteinerInspecaoLacreResumoBuscarColocadoData = {
   "aCoMessageList": []
 };
 
+const mockServicoServiceBuscarData = [{
+
+}];
+
+const mockServicoServiceOpcoesData = [
+  {
+      "TFCTIPOEVENTOINSPECAOID": 5.0,
+      "NOME": "T_INVERSAO_PORTA_CONTAINER_GATE",
+      "DESCRICAO": "Inversao de Porta",
+      "CONSTANTE": "CS_INVERSAOPORTA",
+      "TIPO": 1.0,
+      "TIPOINSPECAO": 0.0,
+      "UID": 5.0,
+      "aCoMessageList": []
+  },
+  {
+      "TFCTIPOEVENTOINSPECAOID": 19.0,
+      "NOME": "T_BITREM_RODOTREM_CARREGAMENTO_OU_ENTREGA",
+      "DESCRICAO": "BITREM",
+      "CONSTANTE": "CS_BITREM",
+      "TIPO": 1.0,
+      "TIPOINSPECAO": 0.0,
+      "UID": 19.0,
+      "aCoMessageList": []
+  }
+];
+
+export const mockServicoServiceOpcoes = async (container) => {
+    // Simula um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 1000));  
+    return mockServicoServiceOpcoesData;
+
+}
+
+export const mockServicoServiceBuscar = async (container) => {
+    // Simula um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 1000));  
+    return mockServicoServiceBuscarData;
+  
+}
 export const mockBuscarLacreColocado = async (container) => {
   // Simula um atraso de rede
   await new Promise(resolve => setTimeout(resolve, 1000));  
