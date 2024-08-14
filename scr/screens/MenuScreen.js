@@ -12,10 +12,7 @@ const handleMenuPress = (title, navigation) => {
     const inspecaoData = {
       tipo: KDTipo.kdInspecaoGate            
     };
-
-    
-    
-    
+            
     const checklist = INSPECAO_CHECKLIST["kdInspecaoGate"];  // Certifique-se de que TIPO corresponde a uma chave em INSPECAO_CHECKLIST
     
     if (checklist) {
@@ -31,6 +28,16 @@ const handleMenuPress = (title, navigation) => {
     const inspecaoData = {
       tipo: KDTipo.kdInspecaoPatio ,           
     };
+
+    const checklist = INSPECAO_CHECKLIST["kdInspecaoPatio"];  // Certifique-se de que TIPO corresponde a uma chave em INSPECAO_CHECKLIST
+    
+    if (checklist) {
+      inspecaoData.checklist = checklist;
+      inspecaoData.checklist.menuL.forEach((eachObj) => {
+        eachObj.isDadosPreenchidos = false;
+      });
+    }
+
     navigation.navigate('PesquisarContainer', inspecaoData);
   
   } else {

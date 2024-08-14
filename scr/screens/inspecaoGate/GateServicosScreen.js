@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from 'react-native-select-dropdown';
-import { buscarServicos,buscarOpcao, salvar, excluir } from '../../services/servico-service';
+import { buscarServicos, buscarOpcao, salvar, excluir } from '../../services/servico-service';
 import { TfcConteinerInspecaoEventoDTO } from '../../models/TfcConteinerInspecaoEventoDTO';
 
 const GateServicosScreen = ({ navigation, route }) => {
@@ -21,7 +21,7 @@ const GateServicosScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    buscarOpcaoApi();    
+    buscarOpcaoApi();
   }, []);
 
   const presentLoading = () => {
@@ -38,31 +38,30 @@ const GateServicosScreen = ({ navigation, route }) => {
       NROCONTEINER: inspecao.tfcContainerInspecaoDto.NROCONTEINER,
       TIPO: inspecao.tipo,
     };
-    buscarOpcao(obj)
-      .then((result) => {
-        console.log("result", result);
-        setOpcaoL(result);
-        buscarDadosApi();
-      })
-      .catch((err) => {
-        dismissLoading();
-        console.log('ERRO', err);
-        Alert.alert('Atenção', 'Erro ao buscar opções');
-      });
+    try {
+      const result = await buscarOpcao(obj);
+      console.log("Opções carregadas:", result);
+      setOpcaoL(result);
+      buscarDadosApi();
+    } catch (err) {
+      console.log('ERRO ao buscar opções', err);
+      Alert.alert('Atenção', 'Erro ao buscar opções');
+    } finally {
+      dismissLoading();
+    }
   };
 
-  const buscarDadosApi = () => {
-    buscarServicos(inspecao.tfcContainerInspecaoDto)
-      .then((result) => {
-        console.log("buscarServicos",result);
-        inspecao.tfcConteinerInspecaoEventoDTO = result;
-        dismissLoading();
-      })
-      .catch((err) => {
-        dismissLoading();
-        console.log('ERRO', err);
-        Alert.alert('Atenção', 'Erro ao buscar dados');
-      });
+  const buscarDadosApi = async () => {
+    try {
+      const result = await buscarServicos(inspecao.tfcContainerInspecaoDto);
+      inspecao.tfcConteinerInspecaoEventoDTO = result;
+      console.log("Serviços carregados:", result);
+    } catch (err) {
+      console.log('ERRO ao buscar dados', err);
+      Alert.alert('Atenção', 'Erro ao buscar dados');
+    } finally {
+      dismissLoading();
+    }
   };
 
   const adicionarServico = async () => {
@@ -70,25 +69,27 @@ const GateServicosScreen = ({ navigation, route }) => {
       return;
     }
     await presentLoading();
-    const servico = opcaoL.find((item) => item.TFCTIPOEVENTOINSPECAOID === servicoSelecionado);
-    const servicoToAdd = new TfcConteinerInspecaoEventoDTO();
-    servicoToAdd.NROCONTEINER = inspecao.tfcContainerInspecaoDto.NROCONTEINER;
-    servicoToAdd.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
-    servicoToAdd.TIPO = inspecao.tfcContainerInspecaoDto.TIPO;
-    servicoToAdd.TFCTIPOEVENTOINSPECAOID = servico.TFCTIPOEVENTOINSPECAOID;
-    servicoToAdd.EVENTODESCRICAO = servico.DESCRICAO;
+    const servico = opcaoL.find((item) => item.TFCTIPOEVENTOINSPECAOID === servicoSelecionado.TFCTIPOEVENTOINSPECAOID);
+    if (servico) {
+      const servicoToAdd = new TfcConteinerInspecaoEventoDTO();
+      servicoToAdd.NROCONTEINER = inspecao.tfcContainerInspecaoDto.NROCONTEINER;
+      servicoToAdd.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
+      servicoToAdd.TIPO = inspecao.tfcContainerInspecaoDto.TIPO;
+      servicoToAdd.TFCTIPOEVENTOINSPECAOID = servico.TFCTIPOEVENTOINSPECAOID;
+      servicoToAdd.EVENTODESCRICAO = servico.DESCRICAO;
 
-    setServicoSelecionado(null);
+      setServicoSelecionado(null);
 
-    salvar(servicoToAdd)
-      .then(() => {
+      try {
+        await salvar(servicoToAdd);
         buscarDadosApi();
-      })
-      .catch((err) => {
-        dismissLoading();
-        console.log('ERRO', err);
+      } catch (err) {
+        console.log('ERRO ao salvar serviço', err);
         Alert.alert('Atenção', 'Erro ao salvar serviço');
-      });
+      } finally {
+        dismissLoading();
+      }
+    }
   };
 
   const removerServico = async (servico) => {
@@ -100,15 +101,15 @@ const GateServicosScreen = ({ navigation, route }) => {
     servicoToRm.TFCTIPOEVENTOINSPECAOID = servico.TFCTIPOEVENTOINSPECAOID;
     servicoToRm.TFCCONTEINERINSPECAOEVENTOID = servico.TFCCONTEINERINSPECAOEVENTOID;
 
-    excluir(servicoToRm)
-      .then(() => {
-        buscarDadosApi();
-      })
-      .catch((err) => {
-        dismissLoading();
-        console.log('ERRO', err);
-        Alert.alert('Atenção', 'Erro ao remover serviço');
-      });
+    try {
+      await excluir(servicoToRm);
+      buscarDadosApi();
+    } catch (err) {
+      console.log('ERRO ao remover serviço', err);
+      Alert.alert('Atenção', 'Erro ao remover serviço');
+    } finally {
+      dismissLoading();
+    }
   };
 
   const finalizarServico = () => {
@@ -127,52 +128,56 @@ const GateServicosScreen = ({ navigation, route }) => {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.form}>
-          {opcaoL && opcaoL.length > 0 && (
-            <View style={styles.dropdown}>
-              <Text style={styles.label}>ADICIONAR SERVIÇO</Text>
-              <SelectDropdown
-                data={opcaoL}
-                onSelect={(selectedItem) => {
-                  setServicoSelecionado(selectedItem.TFCTIPOEVENTOINSPECAOID);
-                  adicionarServico();
-                }}
-                renderButtonText={(selectedItem) => selectedItem.DESCRICAO}
-                renderItem={(item, index, isSelected) => (
-                  <View style={{ ...styles.dropdownItem, ...(isSelected && styles.selectedItem) }}>
-                    <Text style={styles.dropdownItemText}>{item.DESCRICAO}</Text>
-                  </View>
-                )}
-                buttonTextAfterSelection={(selectedItem) => selectedItem.DESCRICAO}
-                rowTextForSelection={(item) => item.DESCRICAO}
-                defaultButtonText="Selecionar Serviço"
-                buttonStyle={styles.dropdownButton}
-                buttonTextStyle={styles.dropdownButtonText}
-                rowStyle={styles.dropdownRow}
-                rowTextStyle={styles.dropdownRowText}
-              />
+        {opcaoL.length > 0 && (
+          <View style={styles.dropdown}>
+            <SelectDropdown
+              data={opcaoL}
+              onSelect={(selectedItem, index) => {
+                setServicoSelecionado(selectedItem);
+                console.log(selectedItem, index);
+                adicionarServico();
+              }}
+              renderButton={(selectedItem, isOpened) => (
+                <View style={styles.dropdownButtonStyle}>
+                  <Text style={styles.dropdownButtonTxtStyle}>
+                    {(selectedItem && selectedItem.DESCRICAO) || 'Selecionar Serviço'}
+                  </Text>
+                  <Icon name={isOpened ? 'chevron-up' : 'chevron-down'} style={styles.dropdownButtonArrowStyle} />
+                </View>
+              )}
+              renderItem={(item, index, isSelected) => (
+                <View style={{ ...styles.dropdownItemStyle, ...(isSelected && { backgroundColor: '#D2D9DF' }) }}>
+                  <Text style={styles.dropdownItemTxtStyle}>{item.DESCRICAO}</Text>
+                </View>
+              )}
+              search
+              searchInputStyle={styles.searchInput}
+              searchPlaceHolder="Buscar..."
+              searchPlaceHolderColor="#999"
+              showsVerticalScrollIndicator={false}
+              dropdownStyle={styles.dropdownMenuStyle}
+            />
+          </View>
+        )}
+
+        <FlatList
+          data={servicoSelecionado}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.servicoItem}>
+              <Text style={styles.servicoText}>{item.EVENTODESCRICAO || item.DESCRICAO}</Text>
+              <TouchableOpacity onPress={() => removerServico(item)}>
+                <Icon name="close" size={24} color="red" />
+              </TouchableOpacity>
             </View>
           )}
+        />
+      </View>
 
-          <FlatList
-            data={inspecao.tfcConteinerInspecaoEventoDTO}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.servicoItem}>
-                <Text style={styles.servicoText}>{item.EVENTODESCRICAO || item.DESCRICAO}</Text>
-                <TouchableOpacity onPress={() => removerServico(item)}>
-                  <Icon name="close" size={24} color="red" />
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.confirmButton} onPress={finalizarServico}>
-            <Text style={styles.confirmButtonText}>Confirmar</Text>            
-          </TouchableOpacity>
-        </View>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.confirmButton} onPress={finalizarServico}>
+          <Text style={styles.confirmButtonText}>Confirmar</Text>            
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -200,36 +205,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
   },
-  form: {
-    marginBottom: 16,
-  },
   dropdown: {
     marginBottom: 16,
   },
-  dropdownButton: {
-    width: '100%',
+  dropdownButtonStyle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     height: 50,
     backgroundColor: '#eee',
     borderRadius: 5,
   },
-  dropdownButtonText: {
+  dropdownButtonTxtStyle: {
     fontSize: 16,
   },
-  dropdownRow: {
+  dropdownButtonArrowStyle: {
+    fontSize: 16,
+    color: '#444',
+  },
+  dropdownItemStyle: {
+    padding: 10,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  dropdownRowText: {
+  dropdownItemTxtStyle: {
     fontSize: 16,
   },
-  dropdownItem: {
+  searchInput: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    marginBottom: 10,
     padding: 10,
   },
-  selectedItem: {
-    backgroundColor: '#D2D9DF',
-  },
-  dropdownItemText: {
-    fontSize: 16,
+  dropdownMenuStyle: {
+    borderRadius: 5,
   },
   servicoItem: {
     flexDirection: 'row',

@@ -5,6 +5,8 @@ import GateAvariasPage from '../screens/inspecaoGate/GateAvariasScreen';
 import GateReeferPage from '../screens/inspecaoGate/GateReeferScreen';
 import GateServicosPage from '../screens/inspecaoGate/GateServicosScreen';
 import GateTransferenciaPage from '../screens/inspecaoGate/GateTransferenciaScreen';
+import PatioAvariasPage from '../screens/inspecaoPatio/PatioAvariasScreen';
+import PatioIMOPage from '../screens/inspecaoPatio/PatioImoScreen';
 /*
 import PatioAvariasPage from '../pages/inspecao-patio/PatioAvariasPage';
 import PatioLacresPage from '../pages/inspecao-patio/PatioLacresPage';
@@ -21,7 +23,9 @@ export const INSPECAO_PAGE_CONFIG = {
   "GateAvariasPage": GateAvariasPage,
   "GateReeferPage": GateReeferPage,
   "GateServicosPage": GateServicosPage,
-  "GateTransferenciaPage": GateTransferenciaPage
+  "GateTransferenciaPage": GateTransferenciaPage,
+  "PatioAvariasPage" : PatioAvariasPage,
+  "PatioImoPage" : PatioIMOPage
   /*
   "PatioAvariasPage": PatioAvariasPage,
   "PatioLacresPage": PatioLacresPage,
@@ -49,10 +53,14 @@ export const INSPECAO_CHECKLIST = {
   },
   kdInspecaoPatio: {
     menuL: [
-      { page: 'PatioDadosPage', name: 'Dados do Pátio' },
-      { page: 'PatioLacresPage', name: 'Lacres do Pátio' },
-      { page: 'PatioAvariasPage', name: 'Avarias do Pátio' },
-      { page: 'PatioIMOPage', name: 'IMO do Pátio' },
+      { page: 'PatioAvarias', name: 'Avarias' },
+      { page: 'PatioLacres', name: 'Lacres do Pátio' },
+      { page: 'PatioIMO', name: 'IMO do Pátio' },
+      { page: 'LacresColocadosPage', name: 'Lacres Colocados' },
+      { page: 'PatioServicosPage', name: 'Serviços' },
+      { page: 'ServicosExcessoPage', name: 'Excesso' },
+      { page: 'PatioServicos', name: 'Serviços' }
+
       // adicione outras páginas conforme necessário
     ]
   },

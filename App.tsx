@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Image, View, StyleSheet } from 'react-native';
 import LoginScreen from './scr/screens/LoginScreen';
 import MenuScreen from './scr/screens/MenuScreen';
 import PesquisarContainerScreen from './scr/screens/PesquisarContainerScreen';
@@ -12,9 +13,10 @@ import GateLacresColocadosScreen from './scr/screens/inspecaoGate/GateLacresColo
 import GateReeferScreen from './scr/screens/inspecaoGate/GateReeferScreen';
 import ServicoExcessoScreen from './scr/screens/servicos/ServicoExcessoScreen';
 import GateServicosScreen from './scr/screens/inspecaoGate/GateServicosScreen';
-
-import { Image, View, StyleSheet } from 'react-native';
 import GateAvariasScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
+import PatioAvariasScreen from './scr/screens/inspecaoPatio/PatioAvariasScreen';
+import PatioLacresScreen from './scr/screens/inspecaoPatio/PatioLacresScreen';
+import PatioImoScreen from './scr/screens/inspecaoPatio/PatioImoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +59,9 @@ function App() {
         <Stack.Screen name="GateReefer" component={GateReeferScreen} />
         <Stack.Screen name="ServicoExcesso" component={ServicoExcessoScreen} />
         <Stack.Screen name="GateServicos" component={GateServicosScreen} />
+        <Stack.Screen name="PatioAvarias" component={PatioAvariasScreen} />
+        <Stack.Screen name="PatioLacres" component={PatioLacresScreen} />
+        <Stack.Screen name="PatioIMO" component={PatioImoScreen} />
         
         <Stack.Screen 
           name="Menu" 
