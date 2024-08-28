@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {login} from '../services/login-service';
 
 const bannerImage = require('../assets/images/LogoDPW.png');
 
@@ -11,23 +12,23 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('https://api.dpworldsantos.com/token', {
-        username,
-        password,
-        grant_type: 'password'
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-
-      const { access_token } = response.data;
-
-      await AsyncStorage.setItem('userToken', access_token);
-      navigation.navigate('Menu');
-
+      console.log("Iniciando o login...");
+      const response = await login(username, password);  // Chamada à função de login
+  
+      if (response && response.data.access_token) {  // Verifique se o login foi bem-sucedido e o token foi retornado
+        navigation.navigate('Menu');
+      } else {
+        Alert.alert("Erro", "Login falhou. Verifique suas credenciais.");
+      }
     } catch (error) {
-      Alert.alert('Erro', 'Usuário ou senha inválidos');
+      // Tratamento de erro detalhado
+      if (error.message === 'Erro de rede ou servidor não respondeu') {
+        Alert.alert('Erro', 'Verifique sua conexão com a internet ou tente novamente mais tarde.');
+      } else if (error.message === 'Erro na configuração da requisição') {
+        Alert.alert('Erro', 'Houve um problema na configuração da requisição. Tente novamente.');
+      } else {
+        Alert.alert('Erro', error.message || 'Ocorreu um erro desconhecido durante o login.');
+      }
     }
   };
 

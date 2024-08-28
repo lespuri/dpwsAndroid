@@ -18,13 +18,14 @@ import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
 const GateReeferScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
   const [loading, setLoading] = useState(false);
-  const [temperature, setTemperature] = useState('');
+  const [temperature, setTemperature] = useState('');  
   const [genset, setGenset] = useState('');
 
   useEffect(() => {
     buscarDadosApi();
   }, []);
-
+  
+  
   const presentLoading = async () => {
     setLoading(true);
   };
@@ -36,23 +37,20 @@ const GateReeferScreen = ({ navigation, route }) => {
   const buscarDadosApi = async () => {
     await presentLoading();
 
-    pesquisar(inspecao.tfcContainerInspecaoDto).then((result) => {
-      inspecao.tfcContainerInspecaoDto = Object.assign(new TfcConteinerInspecaoDTO(), result);
-      setTemperature(inspecao.tfcContainerInspecaoDto.CESETTING);
-      setGenset(inspecao.tfcContainerInspecaoDto.GENSET);
+    const result = await pesquisar(inspecao.tfcContainerInspecaoDto);
+    
+    inspecao.tfcContainerInspecaoDto = { ...new TfcConteinerInspecaoDTO(), ...result };
+    console.log("inspecao.tfcContainerInspecaoDto.CESETTING", inspecao.tfcContainerInspecaoDto.CESETTING);    
+    setGenset(inspecao.tfcContainerInspecaoDto.GENSET);
+    const temperatureString = inspecao.tfcContainerInspecaoDto.CESETTING.toString();
+    setTemperature(temperatureString);
 
-      if (!inspecao.tfcContainerInspecaoDto.CESETTING && inspecao.tfcContainerInspecaoDto.CESETTING !== "") {
-        Alert.alert("Atenção", "Não há previsão de temperatura para este conteiner", [{
-          text: 'OK',
-          onPress: () => navigation.navigate('MenuInspecao', { inspecao }),
-        }]);
-      }
-      dismissLoading();
-    }).catch((err) => {
-      dismissLoading();
-      console.log("ERRO", err);
-      Alert.alert("Atenção", "Erro ao buscar dados da API");
-    });
+    if (!inspecao.tfcContainerInspecaoDto.CESETTING && inspecao.tfcContainerInspecaoDto.CESETTING !== "") {
+      Alert.alert("Atenção", "Não há previsão de temperatura para este conteiner", [{
+        text: 'OK',
+        onPress: () => navigation.navigate('MenuInspecao', { inspecao }),
+      }]);
+    }
   };
 
   const onConfirmar = async () => {
@@ -64,7 +62,7 @@ const GateReeferScreen = ({ navigation, route }) => {
       inspecao.tfcContainerInspecaoDto.GENSET = genset;
 
       salvarReefer(inspecao.tfcContainerInspecaoDto).then((result) => {
-        navigation.navigate('MenuPage', { inspecao });
+        navigation.navigate('MenuInspecao', { inspecao });
         dismissLoading();
       }).catch((err) => {
         dismissLoading();
@@ -90,7 +88,7 @@ const GateReeferScreen = ({ navigation, route }) => {
             <Text style={styles.label}>TEMPERATURA (°C)</Text>
             <TextInput
               style={styles.input}
-              keyboardType="numeric"
+              
               placeholder="TEMPERATURA (°C)"
               value={temperature}
               onChangeText={setTemperature}

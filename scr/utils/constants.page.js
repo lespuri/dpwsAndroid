@@ -41,7 +41,7 @@ export const INSPECAO_CHECKLIST = {
   kdInspecaoGate: {
     menuL: [
       { page: 'GateDados', name: 'Dados do Gate' },
-      { page: 'GateDados', name: 'Dados do IMO' },
+      { page: 'GateIMO', name: 'Dados do IMO' },
       { page: 'GateLacres', name: 'Lacres do Gate' },
       { page: 'GateLacresColocados', name: 'Lacres Colocados' },
       { page: 'GateAvarias', name: 'Avarias do Gate' },

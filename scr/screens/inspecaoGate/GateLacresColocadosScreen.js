@@ -15,13 +15,15 @@ import PageGateHeader from './GateHeaderScreen';
 import { buscarLacreColocado, salvarLacreColocado } from '../../services/lacre-colocado-service';
 import { TfcConteinerInspecaoLacreResumoDTO } from '../../models/TfcConteinerInspecaoLacreResumoDTO';
 
-const GateLacresColocadosScreen = ({ navigation, route }) => {
+const GateLacresColocadosScreen = ({ navigation, route }) => {  
   const { inspecao } = route.params;
   const [colocadosLacresL, setColocadosLacresL] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log("buscarDadosApi", inspecao);
     buscarDadosApi();
+    
     return () => {
       // Cleanup if necessary
     };
@@ -36,49 +38,57 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
   };
 
   const buscarDadosApi = async () => {
-    await presentLoading();
-
-    buscarLacreColocado(inspecao.tfcContainerInspecaoDto).then((result) => {      
-        inspecao.tfcConteinerInspecaoLacreResumoDTO = Object.assign(new TfcConteinerInspecaoLacreResumoDTO(), result);
-      prepararDadosLocal();
-    }).catch((err) => {
-      dismissLoading();
-      console.log("ERRO", err);
-      Alert.alert("Atenção", "Erro ao buscar dados da API");
-    });
+    //await presentLoading();
+    //console.log("buscarDadosApi", inspecao);
+    const result = await buscarLacreColocado(inspecao.tfcContainerInspecaoDto);
+    //inspecao.tfcConteinerInspecaoLacreResumoDTO = Object.assign(new TfcConteinerInspecaoLacreResumoDTO(), result);
+    inspecao.tfcConteinerInspecaoLacreResumoDTO = { ...new TfcConteinerInspecaoLacreResumoDTO(), ...result };
+    console.log("buscarDadosApi", inspecao);
+    prepararDadosLocal();
   };
+  
 
   const prepararDadosLocal = () => {
-    console.log("prepararDadosLocal");
+    console.log("prepararDadosLocal")
     let lacres = inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS.split(",");
     lacres = lacres.filter(element => element !== "");
     let outrosLacresQtd = 5 - lacres.length;
     for (let i = 0; i < outrosLacresQtd; i++) {
       lacres.push("");
     }
+    console.log("setColocadosLacresL", lacres);
     setColocadosLacresL(lacres);
-    dismissLoading();
+    //dismissLoading();
   };
 
   const adicionarOutroLacre = () => {
     setColocadosLacresL([...colocadosLacresL, ""]);
   };
-
+  
   const finalizarLacre = async () => {
-    let outrosLacres = colocadosLacresL.filter(element => element !== "");
-    inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS = outrosLacres.join(",");
-    inspecao.tfcConteinerInspecaoLacreResumoDTO.NextAction = "Next";
+    try {
+      console.log("finalizarLacre");
+      let outrosLacres = colocadosLacresL.filter(element => element !== "");
+      
+      inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS = outrosLacres.join(",");
+      inspecao.tfcConteinerInspecaoLacreResumoDTO.NextAction = "Next";
 
-    await presentLoading();
-
-    salvarLacreColocado(inspecao.tfcConteinerInspecaoLacreResumoDTO).then(() => {
-      navigation.navigate('MenuPage', { inspecao });
-      dismissLoading();
-    }).catch((err) => {
-      dismissLoading();
+      console.log("finalizarLacre0");
+      console.log("finalizarLacre", inspecao);
+  
+      //await presentLoading();
+      const result =  await salvarLacreColocado(inspecao.tfcConteinerInspecaoLacreResumoDTO);
+      console.log("Salvamento com sucesso:", result);
+  
+      // Navegação após o sucesso
+      navigation.navigate('MenuInspecao', { inspecao });
+  
+    } catch (err) {
       console.log("ERRO", err);
       Alert.alert("Atenção", "Erro ao salvar os dados");
-    });
+    } finally {
+      dismissLoading();
+    }
   };
 
   return (

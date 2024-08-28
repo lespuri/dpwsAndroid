@@ -19,7 +19,7 @@ import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import PageGateHeader from './GateHeaderScreen';
 import {salvar } from '../../services/container-service';
 import { buscarLacre } from '../../services/lacre-service';
-import { buscarAvaria } from '../../services/avarias-service';
+import { buscarAvaria, buscarImagem } from '../../services/avarias-service';
 import AlertProvider from '../../services/Alert';
 import { _CAMERA_TARGET_HEIGHT, _CAMERA_TARGET_WIDTH, _AVARIA_PADRAO, _AVARIA_IGNORAR, _CAMERA_QUALITY } from '../../services/properties.service';
 import TfcConteinerInspecaoAvaria from '../../models/TfcConteinerInspecaoAvaria';
@@ -56,13 +56,15 @@ const GateAvariasScreen = ({ navigation, route }) => {
   const buscarDadosApi = async () => {
     try {
       const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
-      inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
+      //inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
+      
+      inspecao.tfcConteinerFinalizarInspecaoDTO = { ...new TfcConteinerFinalizarInspecaoDTO(), ...result };
       
       if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO) {
         buscarDadosApi(); // Retry if data not loaded
       } else {        
-        prepararDadosLocal();
-        buscarDadosApiAvariaCompleta();
+        await prepararDadosLocal();
+        await buscarDadosApiAvariaCompleta();
       }
     } catch (err) {
       // Handle error
@@ -71,7 +73,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
     }
   };
 
-  const prepararDadosLocal = () => {
+  const prepararDadosLocal = async () => {
     const tipos = [];
     const componentes = [];
 
@@ -94,11 +96,12 @@ const GateAvariasScreen = ({ navigation, route }) => {
     try {
       const result = await buscarAvaria(inspecao.tfcContainerInspecaoDto);
       const avarias = Object.assign([], result);
-
+            
       avarias.forEach(element => {
         let type = tipoL.find(item => item.ID === element.TIPO);
         let component = componenteL.find(item => item.ID === element.COMPONENTE);
-
+        
+        console.log("avarias.forEach > element.COMPONENTE", element.COMPONENTE);
         if (component) {
           element.COMPONENTEDESCRICAO = component.DESCRIPTION;
         }
@@ -120,7 +123,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
   const buscarImagensApi = async (avaria) => {
     try {
-      const result = await AvariaServiceProvider.buscarImagem(avaria);
+      const result = await buscarImagem(avaria);
       avaria.imagemL = result;
     } catch (err) {
       // Handle error
@@ -183,7 +186,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
     });
   };
 
-  const finalizarAvaria = (isConfirmar) => {
+  const finalizarAvaria = async (isConfirmar) => {
     if (!isConfirmar) {
       adicionarAvaria(true);
     } else {
@@ -209,12 +212,18 @@ const GateAvariasScreen = ({ navigation, route }) => {
       } else {
         presentLoading();
 
+        const resultJson = JSON.stringify(inspecao.tfcConteinerFinalizarInspecaoDTO);
+        
+        await salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+        navegarProximaEtapa();
+        
+        /*
         salvar(inspecao.tfcConteinerFinalizarInspecaoDTO)
           .then(() => uploadFile())
           .catch(err => {
             console.log("ERRO", err);
             Alert.alert("Atenção", "Erro ao salvar os dados");
-          });
+          });*/
       }
     }
   };

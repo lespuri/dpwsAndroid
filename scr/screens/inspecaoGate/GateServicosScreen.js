@@ -12,7 +12,10 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from 'react-native-select-dropdown';
 import { buscarServicos, buscarOpcao, salvar, excluir } from '../../services/servico-service';
+import { pesquisar } from '../../services/container-service';
 import { TfcConteinerInspecaoEventoDTO } from '../../models/TfcConteinerInspecaoEventoDTO';
+import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
+//TfcConteinerInspecaoDTO
 
 const GateServicosScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
@@ -20,7 +23,7 @@ const GateServicosScreen = ({ navigation, route }) => {
   const [servicoSelecionado, setServicoSelecionado] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  useEffect(() => {    
     buscarOpcaoApi();
   }, []);
 
@@ -39,8 +42,8 @@ const GateServicosScreen = ({ navigation, route }) => {
       TIPO: inspecao.tipo,
     };
     try {
-      const result = await buscarOpcao(obj);
-      console.log("Opções carregadas:", result);
+      
+      const result = await buscarOpcao(obj);      
       setOpcaoL(result);
       buscarDadosApi();
     } catch (err) {
@@ -53,9 +56,24 @@ const GateServicosScreen = ({ navigation, route }) => {
 
   const buscarDadosApi = async () => {
     try {
+      const obj = {
+        NROCONTEINER: inspecao.tfcContainerInspecaoDto.NROCONTEINER,
+        TIPO: inspecao.tipo,
+      };  
+      //const resultCOnteiner = await pesquisar(obj);
+      //inspecao.tfcContainerInspecaoDto = { ...new TfcConteinerInspecaoDTO(), ...resultCOnteiner };
+            
       const result = await buscarServicos(inspecao.tfcContainerInspecaoDto);
-      inspecao.tfcConteinerInspecaoEventoDTO = result;
-      console.log("Serviços carregados:", result);
+      inspecao.tfcConteinerInspecaoEventoDTO = { ...new TfcConteinerInspecaoEventoDTO(), ...result };
+      //inspecao.tfcConteinerInspecaoEventoDTO = result;
+      //setServicoSelecionado(inspecao.tfcConteinerInspecaoEventoDTO);
+      const eventoServicos = result.map(item => ({ 
+        EVENTODESCRICAO: item.EVENTODESCRICAO || item.DESCRICAO,
+        TFCTIPOEVENTOINSPECAOID: item.TFCTIPOEVENTOINSPECAOID,
+        TFCCONTEINERINSPECAOEVENTOID: item.TFCCONTEINERINSPECAOEVENTOID
+      }));
+      await setServicoSelecionado(eventoServicos);      
+      console.log("Serviços carregados:", eventoServicos);
     } catch (err) {
       console.log('ERRO ao buscar dados', err);
       Alert.alert('Atenção', 'Erro ao buscar dados');
@@ -64,23 +82,21 @@ const GateServicosScreen = ({ navigation, route }) => {
     }
   };
 
-  const adicionarServico = async () => {
-    if (!servicoSelecionado) {
-      return;
-    }
+  const adicionarServico = async (item) => {
+    console.log("adicionarServic > item", item);
     await presentLoading();
-    const servico = opcaoL.find((item) => item.TFCTIPOEVENTOINSPECAOID === servicoSelecionado.TFCTIPOEVENTOINSPECAOID);
-    if (servico) {
-      const servicoToAdd = new TfcConteinerInspecaoEventoDTO();
-      servicoToAdd.NROCONTEINER = inspecao.tfcContainerInspecaoDto.NROCONTEINER;
-      servicoToAdd.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
-      servicoToAdd.TIPO = inspecao.tfcContainerInspecaoDto.TIPO;
-      servicoToAdd.TFCTIPOEVENTOINSPECAOID = servico.TFCTIPOEVENTOINSPECAOID;
-      servicoToAdd.EVENTODESCRICAO = servico.DESCRICAO;
+    
+    const servicoToAdd = new TfcConteinerInspecaoEventoDTO();
+    servicoToAdd.NROCONTEINER = inspecao.tfcContainerInspecaoDto.NROCONTEINER;
+    servicoToAdd.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
+    servicoToAdd.TIPO = inspecao.tfcContainerInspecaoDto.TIPO;
+    servicoToAdd.TFCTIPOEVENTOINSPECAOID = item.TFCTIPOEVENTOINSPECAOID;
+    servicoToAdd.EVENTODESCRICAO = item.DESCRICAO;
 
-      setServicoSelecionado(null);
+      //setServicoSelecionado(null);
 
       try {
+        console.log("salvar");
         await salvar(servicoToAdd);
         buscarDadosApi();
       } catch (err) {
@@ -89,7 +105,7 @@ const GateServicosScreen = ({ navigation, route }) => {
       } finally {
         dismissLoading();
       }
-    }
+    
   };
 
   const removerServico = async (servico) => {
@@ -113,7 +129,7 @@ const GateServicosScreen = ({ navigation, route }) => {
   };
 
   const finalizarServico = () => {
-    navigation.navigate('MenuPage', { inspecao });
+    navigation.navigate('MenuInspecao', { inspecao });
   };
 
   return (
@@ -134,8 +150,8 @@ const GateServicosScreen = ({ navigation, route }) => {
               data={opcaoL}
               onSelect={(selectedItem, index) => {
                 setServicoSelecionado(selectedItem);
-                console.log(selectedItem, index);
-                adicionarServico();
+                console.log("servico selcionado", selectedItem);
+                adicionarServico(selectedItem);
               }}
               renderButton={(selectedItem, isOpened) => (
                 <View style={styles.dropdownButtonStyle}>

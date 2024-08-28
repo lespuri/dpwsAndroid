@@ -15,6 +15,11 @@ const PesquisarContainerScreen = () => {
   const [tfcContainerInspecaoDto, setTfcContainerInspecaoDto] = useState(new TfcConteinerInspecaoDTO());
   const [inspecao, setInspecao] = useState(inspecaoData);
   const [searchTriggered, setSearchTriggered] = useState(false);
+  
+  useEffect(() => {
+    setModelContainer('TOFU1234567');
+    
+  });
 
   useEffect(() => {
     setModelContainer(inspecao.container || '');
@@ -23,27 +28,28 @@ const PesquisarContainerScreen = () => {
 
   useEffect(() => {
     if (searchTriggered) {
-      const updatedDto = {
-        ...tfcContainerInspecaoDto,
-        NROCONTEINER: inspecao.containerSemFormato,
+      
+      const updatedDto = {        
+        NROCONTEINER: modelContainer,
         TIPO: inspecao.tipo,
       };
 
       const performSearch = async () => {
         try {
-
-          const result = await pesquisar(updatedDto);          
+          console.log("payload consulta", updatedDto);
+          const result = await pesquisar(updatedDto); 
+          console.log(result);         
           setTfcContainerInspecaoDto(result);
-
+          
           const updatedInspecao = {
             ...inspecao,
-            tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
+            tfcContainerInspecaoDto:  result
             
           };          
           updatedInspecao.checklist.menuL.forEach((eachObj) => {
             eachObj.isDadosPreenchidos = false;
           });
-
+          
           setInspecao(updatedInspecao);
           //Alert.alert('Success', 'Container encontrado!');
           navigation.navigate('MenuInspecao', updatedInspecao);

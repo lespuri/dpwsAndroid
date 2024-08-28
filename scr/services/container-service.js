@@ -1,10 +1,14 @@
 import { apiRequest } from './apiRequest-services';
 import {mockConteinerServicePesquisar, mockConteinerServiceEditar } from '../utils/mocados'
+import { Alert } from 'react-native';
 
 export const pesquisar = (container) => {
-  console.log("container pesquisa", container);
-  return  mockConteinerServicePesquisar();
-  //return apiRequest('post', 'TfcConteinerInspecao/Buscar', container);
+  try{
+    return apiRequest('post', 'TfcConteinerInspecao/Buscar', container);
+  }  catch(err){
+    throw new Error(err);
+  }
+  
 };
 
 export const iniciarGate = (container) => {
@@ -12,16 +16,28 @@ export const iniciarGate = (container) => {
 };
 
 export const salvar = (container) => {
+  try {            
+    return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);            
+
+  }  catch (error) {
+    console.error('Erro ao salvar inspecao', error.response || error.message);
+  }
+  
+  
+};
+
+
+export const salvarOld = (container) => {
   return new Promise((resolve, reject) => {
     // lógica para salvar os dados
     // ...
     console.log(container);
-    //return apiRequest('post', 'TfcConteinerInspecao/Salvar', container);
+    //return ;
     // Sucesso
-    resolve();
+    resolve(apiRequest('post', 'TfcConteinerInspecao/Salvar', container));
 
     // Ou, em caso de erro
-    // reject(new Error("Erro ao salvar os dados"));
+     reject(new Error("Erro ao salvar os dados"));
   });
 };
 /*
@@ -32,13 +48,16 @@ export const salvar = (container) => {
 };
 */
 export const finalizar = (container, reservaJanelaId) => {
-  return apiRequest('post', `TfcConteinerInspecao/Finalizar?reservaJanelaId=${reservaJanelaId}`, container);
+ // console.log("container",container);
+  //console.log("reservaJanelaId",reservaJanelaId);
+  console.log("finalizarAPi");
+  return apiRequest('post', `TfcConteinerInspecao/Finalizar`, container);
 };
 
 export const editar = (container) => {
   console.log("editar", container);
-  return  mockConteinerServiceEditar(container);
-  //return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
+  //return  mockConteinerServiceEditar(container);
+  return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
 };
 
 export const salvarReefer = (container) => {
@@ -46,7 +65,13 @@ export const salvarReefer = (container) => {
 };
 
 export const salvarExcesso = (container) => {
-  return apiRequest('post', 'TfcExcessoReefer/SalvarExcesso', container);
+  //console.log("salvarExcesso", container);
+  try{
+    return apiRequest('post', 'TfcExcessoReefer/SalvarExcesso', container);
+  }catch(err){
+    throw new Error(err);    
+  }
+  
 };
 
 export const salvarEntrada = (container) => {

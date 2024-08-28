@@ -50,48 +50,67 @@ const ServicoExcessoScreen = ({ navigation, route }) => {
   };
 
   const buscarDadosApi = async () => {
-    await presentLoading();
-
-    pesquisar(inspecao.tfcContainerInspecaoDto).then((result) => {
-      inspecao.tfcContainerInspecaoDto = Object.assign(new TfcConteinerInspecaoDTO(), result);
-      dismissLoading();
-      setTimeout(() => {
-        if (alturaInputRef.current) {
-          alturaInputRef.current.focus();
-        }
-      }, 100);
-    }).catch((err) => {
-      dismissLoading();
-      console.log("ERRO", err);
-      Alert.alert("Atenção", "Erro ao buscar dados da API");
-    });
+    //console.log("pesquisar", inspecao.tfcContainerInspecaoDto.NROCONTEINER)
+    const obj = {
+      NROCONTEINER: inspecao.tfcContainerInspecaoDto.NROCONTEINER,
+      TIPO: inspecao.tipo,
+    };
+    const result = await pesquisar(obj); 
+    console.log(result);
+    inspecao.tfcContainerInspecaoDto = { ...new TfcConteinerInspecaoDTO(), ...result };
+    //console.log("resulta", JSON.stringify(result))
+    setTimeout(() => {
+      if (alturaInputRef.current) {
+        alturaInputRef.current.focus();
+      }
+    }, 100);
   };
 
   const onConfirmar = async () => {
-    await presentLoading();
+    //await presentLoading();
+    
+    inspecao.tfcContainerInspecaoDto.CEALTURA = altura;
+    inspecao.tfcContainerInspecaoDto.CEDIREITA = direita;
+    inspecao.tfcContainerInspecaoDto.CEESQUERDA = esquerda;
+    inspecao.tfcContainerInspecaoDto.CEFRONTAL = frontal;
+    inspecao.tfcContainerInspecaoDto.CETRASEIRO = traseiro;
+    
+    try{
+      await salvarExcesso(inspecao.tfcContainerInspecaoDto);
+      navigation.navigate('MenuInspecao', { inspecao });
+    }catch(err){
+      //console.error(err);
+      Alert.alert("Erro", err.message);
+    }
+    
+    
+    
 
+/*
     salvarExcesso(inspecao.tfcContainerInspecaoDto).then((result) => {
-      navigation.navigate('MenuPage', { inspecao });
+      navigation.navigate('MenuInspecao', { inspecao });
       dismissLoading();
     }).catch((err) => {
       dismissLoading();
       console.log("ERRO", err);
       Alert.alert("Atenção", "Erro ao salvar os dados");
     });
+    */
   };
 
   const updateIOPStatus = () => {
     const dto = inspecao.tfcContainerInspecaoDto;
+    //console.log("dto.CEALTURA",dto.CEALTURA);
     if (!dto.CEALTURA && !dto.CEDIREITA && !dto.CEESQUERDA && !dto.CEFRONTAL && !dto.CETRASEIRO) {
-      setIop(false);
+      setIop(false);      
     } else {
-      setIop(true);
+      setIop(true);      
     }
     dto._IOP = iop;
   };
 
   useEffect(() => {
-    updateIOPStatus();
+    updateIOPStatus();    
   }, [altura, direita, esquerda, frontal, traseiro]);
 
   return (

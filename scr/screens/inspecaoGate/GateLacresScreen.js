@@ -15,7 +15,12 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import {salvar} from '../../services/container-service'
-import {buscarLacre, buscarDadosCompletoLacre, uploadImagem} from '../../services/lacre-service'
+import {buscarLacre, buscarDadosCompletoLacre, uploadImagem, buscarImagemLacre} from '../../services/lacre-service'
+import ImageResizer from 'react-native-image-resizer';
+import RNFS from 'react-native-fs';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+
+
 const GateLacresScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
   const [lacrePrevistoConfirmadoL, setLacrePrevistoConfirmadoL] = useState([]);
@@ -24,6 +29,7 @@ const GateLacresScreen = ({ navigation, route }) => {
   const [cameraVisible, setCameraVisible] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
+  const [lacrePrevistoConfirmado, setLacrePrevistoConfirmado] = useState(null);
   const cameraRef = useRef(null);
 
   const devices = useCameraDevices();
@@ -33,11 +39,24 @@ const GateLacresScreen = ({ navigation, route }) => {
     setLacrePrevistoConfirmadoL(inspecao.lacrePrevistoConfirmadoL || []);
     setOutrosLacresL(inspecao.outrosLacresL || []);
     buscarDadosApi();
+    requestCameraPermission();
   }, []);
+
+  const requestCameraPermission = async () => {
+    const permission = await Camera.getCameraPermissionStatus();
+    console.log(permission);
+    if (permission !== 'granted') {
+      const request = await Camera.requestCameraPermission();
+      if (request !== 'granted') {
+        Alert.alert('Permissão de Câmera Negada', 'Por favor, conceda permissão de acesso à câmera nas configurações do dispositivo.');
+      }
+    }
+  };
 
   const buscarDadosApi = async () => {
     try {
       const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
+      
       let lacresColocados = "";
 
       if (inspecao.tfcConteinerFinalizarInspecaoDTO != null && inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO != null && inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.COLOCADOS) {
@@ -63,26 +82,38 @@ const GateLacresScreen = ({ navigation, route }) => {
     let outrosLacresL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NOVOS.split(",");
     outrosLacresL = outrosLacresL.filter(element => element !== "");
 
+
+
     outrosLacresL.forEach(element => {
       setOutrosLacresL(prevLacres => [...prevLacres, { lacre: element, imagem: {} }]);
     });
 
-    // Adicionando 5 itens em branco para visualizar os outros lacres
+    // Adicionando lacres em branco para visualizar os outros lacres
     let outrosLacresQtd = 4 - outrosLacresL.length;
     for (let i = 0; i < outrosLacresQtd; i++) {
       adicionarOutroLacre();
     }
 
+    console.log("lacreConfirmadoL", inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.CONFIRMADOS);
     let lacreConfirmadoL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.CONFIRMADOS.split(",");
+    
     lacreConfirmadoL = lacreConfirmadoL.filter(element => element !== "");
-
+    
+    // Adicionando lacres confirmados sem duplicação
     lacreConfirmadoL.forEach(element => {
-      setLacrePrevistoConfirmadoL(prevLacres => [...prevLacres, { lacre: element, status: "confirmado", imagem: {} }]);
+      
+      setLacrePrevistoConfirmadoL(prevLacres => {
+        if (!prevLacres.some(lacre => lacre.lacre === element)) {
+          return [...prevLacres, { lacre: element, status: "confirmado", imagem: {} }];
+        }
+        return prevLacres;
+      });
     });
 
     let previstosL = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.PREVISTOS.split(",");
     previstosL = previstosL.filter(element => element !== "");
 
+    // Removendo lacres previstos que já foram confirmados
     lacrePrevistoConfirmadoL.forEach(lacrePrevisto => {
       let index = previstosL.indexOf(lacrePrevisto.lacre);
       if (index !== -1) {
@@ -90,12 +121,19 @@ const GateLacresScreen = ({ navigation, route }) => {
       }
     });
 
+    // Adicionando lacres previstos sem duplicação
     previstosL.forEach(lacre => {
-      setLacrePrevistoConfirmadoL(prevLacres => [...prevLacres, { lacre, status: "previsto", imagem: {} }]);
+      setLacrePrevistoConfirmadoL(prevLacres => {
+        if (!prevLacres.some(lacreItem => lacreItem.lacre === lacre)) {
+          return [...prevLacres, { lacre, status: "previsto", imagem: {} }];
+        }
+        return prevLacres;
+      });
     });
 
     buscarDadosCompletoApi();
   };
+  
 
   const buscarDadosCompletoApi = async () => {
     try {
@@ -118,10 +156,10 @@ const GateLacresScreen = ({ navigation, route }) => {
     }
   };
 
-  const buscarImagemApi = async (lacreCompleto, lacreBusca) => {
+  const buscarImagemApi = async (lacreCompleto, lacreBusca) => {    
     if (lacreCompleto.NUMERO === lacreBusca.lacre) {
       try {
-        const resultImagem = await LacreServiceProvider.buscarImagem(lacreCompleto);
+        const resultImagem = await buscarImagemLacre(lacreCompleto);
         let imagem = { ...resultImagem };
 
         if (imagem && imagem.CAMINHO) {
@@ -135,25 +173,67 @@ const GateLacresScreen = ({ navigation, route }) => {
   };
 
 
-  const goToCamera = (item) => {
-    setCurrentImageIndex(outrosLacresL.indexOf(item));
+  const goToCamera = (item, index, _lacrePrevistoColocado) => {
+    console.log("index", index);
+    setCurrentImageIndex(index );
     setCameraVisible(true);
+    setLacrePrevistoConfirmado(_lacrePrevistoColocado);
   };
 
   const capturePhoto = async () => {
+    try{
+
+    
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePhoto({
-        flash: 'auto',
-        qualityPrioritization: 'balanced',
-        skipMetadata: true,
-      });
-      console.log("photo.path", photo.path);
-      const updatedLacres = [...outrosLacresL];
-      updatedLacres[currentImageIndex].imagem = { uri: `file://${photo.path}` }; // Prefixar com file://
-      setOutrosLacresL(updatedLacres);
-      setCameraVisible(false);      
+        const photo = await cameraRef.current.takePhoto({
+          flash: 'auto',
+          qualityPrioritization: 'balanced',
+        });
+    
+        // Obtenha o caminho do arquivo
+        const fileUri = `file://${photo.path}`;
+    
+        // Verifique o tamanho da imagem
+        const fileStat = await RNFS.stat(fileUri);
+    
+        const MAX_SIZE_MB = 3;
+        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    
+        if (fileStat.size > MAX_SIZE_BYTES) {
+          // Redimensione a imagem para uma resolução menor
+          const resizedImage = await ImageResizer.createResizedImage(
+            fileUri,
+            800, // nova largura
+            600, // nova altura
+            'JPEG', // formato
+            80 // qualidade
+          );
+    
+          // Substitua o caminho original pela imagem redimensionada
+          //setImageNovaL([...imageNovaL, { uri: resizedImage.uri }]);
+          
+          if (lacrePrevistoConfirmado
+          ){
+            const updatedLacres = [...lacrePrevistoConfirmadoL];
+            updatedLacres[currentImageIndex].imagem = { uri: resizedImage.uri }; // Prefixar com file://
+            setLacrePrevistoConfirmadoL(updatedLacres);  
+          }else{
+            const updatedLacres = [...outrosLacresL];
+            updatedLacres[currentImageIndex].imagem = { uri: resizedImage.uri }; // Prefixar com file://
+            setOutrosLacresL(updatedLacres);  
+
+          }    
+        } else {
+          setImageNovaL([...imageNovaL, { uri: fileUri }]);
+        }
+    
+        setCameraVisible(false);        
+      }
+    }catch(err){
+      setCameraVisible(false);        
     }
   };
+
 
   const showModal = (index, imageUrl) => {
     setCurrentImageIndex(index);
@@ -180,17 +260,18 @@ const GateLacresScreen = ({ navigation, route }) => {
   };
 
   const handleConfirmarLacre = (item) => {
+    console.log("handleConfirmarLacre -> item",item );
     const updatedLacres = lacrePrevistoConfirmadoL.map((lacre) => {
       if (lacre === item) {
         lacre.status = lacre.status === 'previsto' ? 'confirmado' : 'previsto';
       }
       return lacre;
-    });
-    setLacrePrevistoConfirmadoL(updatedLacres);
+    });    
+    setLacrePrevistoConfirmadoL(updatedLacres);    
   };
 
   const handleFinalizarLacre = async () => {
-    try {
+    try {      
       const lacreConfirmadoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "confirmado");
       const lacrePrevistoL = lacrePrevistoConfirmadoL.filter(lacre => lacre.status === "previsto");
         
@@ -202,11 +283,17 @@ const GateLacresScreen = ({ navigation, route }) => {
         return;
       }
 
+    console.log("lacreConfirmadoL", lacreConfirmadoL.map(lacre => lacre.lacre).join(","));
+
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE = inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.SEMLACRE;
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.CONFIRMADOS = lacreConfirmadoL.map(lacre => lacre.lacre).join(",");
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NOVOS = outrosLacresL.map(lacre => lacre.lacre).join(",");
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
-
-      await salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+      inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.NextAction = "Next";
+      //console.log("inspecao.tfcConteinerFinalizarInspecaoDTO", inspecao.tfcConteinerFinalizarInspecaoDTO);
+      
+      const returna = await salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+      
       await uploadFiles();
     } catch (err) {
       console.log("ERRO", err);
@@ -232,7 +319,8 @@ const GateLacresScreen = ({ navigation, route }) => {
         if (isLacreImagem(lacre)) {
           isHasImage = true;
           try {
-            await uploadImagem(inspecao.tfcContainerInspecaoDto, lacre.lacre, lacre.imagem);
+            
+            await uploadImagem(inspecao.tfcContainerInspecaoDto, lacre.lacre, lacre.imagem );
           } catch (err) {
             isOccurredError = true;
             console.log("uploadImagem ERRO", err);
@@ -275,10 +363,10 @@ const GateLacresScreen = ({ navigation, route }) => {
               {item.status === 'previsto' ? (
                 <Icon name="check-circle" size={24} color="orange" onPress={() => handleConfirmarLacre(item)} />
               ) : (
-                <Icon name="close" size={24} color="red" onPress={() => handleConfirmarLacrePrevisto(item)} />
+                <Icon name="close" size={24} color="red" onPress={() => handleConfirmarLacre(item)} />
               )}
               {!item.imagem?.uri && (
-                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item)} />
+                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item,  index, true)} />
               )}
               {item.imagem?.uri && (
                 <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>
@@ -309,7 +397,7 @@ const GateLacresScreen = ({ navigation, route }) => {
                 }}
               />
               {!item.imagem?.uri && (
-                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item)} />
+                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item, index, false)} />
               )}
               {item.imagem?.uri && (
                 <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>
@@ -330,7 +418,7 @@ const GateLacresScreen = ({ navigation, route }) => {
       </View>
 
       <TouchableOpacity style={styles.finalizarButton} onPress={handleFinalizarLacre}>
-        <Text style={styles.finalizarButtonText}>Finalizar</Text>
+        <Text style={styles.finalizarButtonText}>Confirmar</Text>
       </TouchableOpacity>
 
       {cameraVisible && (
@@ -380,11 +468,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#666',
   },
-  form: {
+    form: {
     flex: 1,
   },
   item: {
@@ -402,7 +493,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 8,
-    marginRight: 8,
+    marginRight: 8    
   },
   image: {
     width: 50,

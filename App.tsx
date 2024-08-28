@@ -17,6 +17,8 @@ import GateAvariasScreen from './scr/screens/inspecaoGate/GateAvariasScreen';
 import PatioAvariasScreen from './scr/screens/inspecaoPatio/PatioAvariasScreen';
 import PatioLacresScreen from './scr/screens/inspecaoPatio/PatioLacresScreen';
 import PatioImoScreen from './scr/screens/inspecaoPatio/PatioImoScreen';
+import GateIndexScreen from './scr/screens/inspecaoGate/GateIndexScreen';
+import GateImoScreen from './scr/screens/inspecaoGate/GateIMOScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +64,10 @@ function App() {
         <Stack.Screen name="PatioAvarias" component={PatioAvariasScreen} />
         <Stack.Screen name="PatioLacres" component={PatioLacresScreen} />
         <Stack.Screen name="PatioIMO" component={PatioImoScreen} />
+        <Stack.Screen name="GateIMO" component={GateImoScreen} />
+        <Stack.Screen name="GateIndex" component={GateIndexScreen} 
+        options={{headerTitle: "Inspeção de Gate"}}
+        />
         
         <Stack.Screen 
           name="Menu" 

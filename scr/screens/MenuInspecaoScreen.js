@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Keyboard } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import ContainerServiceProvider from '../services/container-service';
+import { finalizar } from '../services/container-service';
 //import PatioImoServiceProvider from '../services/patio-imo-service';
 import { INSPECAO_PAGE_CONFIG } from '../utils/constants.page';
 import { KDTipo } from '../enum/KDTipo';
 import BaseModel from '../models/BaseModel';
 import AlertService from '../services/Alert';
+import {buscar} from '../services/imo-service';
 
 const MenuInspecaoScreen = () => {
   const [inspecao, setInspecao] = useState({});
@@ -20,6 +21,8 @@ const MenuInspecaoScreen = () => {
     if (params) {
       const inspecaoData = params;      
       setInspecao(inspecaoData);
+
+      
     }
 
     const handleKeyPress = (e) => {
@@ -42,7 +45,7 @@ const MenuInspecaoScreen = () => {
   }, [inspecao]);
 
   const goTo = (menu) => {
-    console.log("menu", menu.page);
+    
     inspecao.checklistSelecionado = menu;
     navigation.navigate(menu.page, { inspecao });
   };
@@ -79,7 +82,7 @@ const MenuInspecaoScreen = () => {
       return;
     }
     try {
-      const result = await PatioImoServiceProvider.buscar(inspecao.tfcContainerInspecaoDto);
+      const result = await buscar(inspecao.tfcContainerInspecaoDto);
       const imoDbL = [...result];
       if (imoDbL.length > 0 && !inspecao.tfcConteinerInspecaoIMODTO) {
         Alert.alert(
@@ -107,10 +110,13 @@ const MenuInspecaoScreen = () => {
   const onFinalizar = async () => {
     inspecao.tfcContainerInspecaoDto.TIPO = inspecao.tipo;
     inspecao.tfcContainerInspecaoDto.TIPOENUM = KDTipo[inspecao.tipo];
+    
     presentLoading();
     try {
-      const result = await ContainerServiceProvider.finalizar(inspecao.tfcContainerInspecaoDto, inspecao.reservaSelecionada?.RESERVAJANELAID || 0);
-      dismissLoading();
+      console.log("finalizar");
+      const result = await finalizar(inspecao.tfcContainerInspecaoDto, inspecao.reservaSelecionada?.RESERVAJANELAID || 0);
+      
+      //dismissLoading();
       navigation.popToTop();
       if (inspecao.tipo === KDTipo.kdInspecaoGate) {
         present("Inspecão finalizada com sucesso", "", []);
@@ -126,9 +132,9 @@ const MenuInspecaoScreen = () => {
         navigation.navigate('Home');
       }
     } catch (error) {
-      dismissLoading();
+      //dismissLoading();
       console.error(error);
-      presentErr("Atenção", error, []);
+      presentErr("Atenção", error.toString(), []);
     }
   };
 

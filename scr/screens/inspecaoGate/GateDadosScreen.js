@@ -46,9 +46,12 @@ const GateDadosScreen = () => {
       
       setInspecao({ ...inspecao, tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result) });
       
-      navigation.goBack();
+      console.log(inspecao);
+      navigation.navigate('MenuInspecao', inspecao);
+      
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível confirmar os dados');
+      console.log("editar Dado", error);
+      Alert.alert('Erro', error.toString());
     } finally {
       setLoading(false);
     }

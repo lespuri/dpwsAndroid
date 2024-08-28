@@ -5,11 +5,11 @@ import { Platform } from 'react-native';
 
 
 export const buscarAvaria = async (container) => {
-  try {
-    
-    //const response = await apiRequest.post('TfcConteinerInspecaoAvaria/Buscar', container);
-    const response = [] ; // mock]
-    return response.data;
+  try {    
+    console.log("buscarAvaria", container);
+    const response = await apiRequest('post','TfcConteinerInspecaoAvaria/Buscar', container);
+    console.log("buscarAvaria", response);
+    return response;
   } catch (error) {
     console.error("Erro ao buscar avarias", error);
     throw error.response ? error.response.data : error;
@@ -19,8 +19,9 @@ export const buscarAvaria = async (container) => {
 
 export const buscarImagem = async (avaria) => {
   try {
-    const response = await apiRequest.post(`TfcConteinerInspecaoAvaria/Download?id=${avaria.TFCCONTEINERINSPECAOAVARIAID}`, avaria);
-    return response.data;
+    const response = await apiRequest('post', `TfcConteinerInspecaoAvaria/Download?id=${avaria.TFCCONTEINERINSPECAOAVARIAID}`, avaria);
+    console.log("buscarImagem", response);
+    return response;
   } catch (error) {
     console.error("Erro ao buscar imagem", error);
     throw error.response ? error.response.data : error;

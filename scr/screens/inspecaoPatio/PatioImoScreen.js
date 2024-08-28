@@ -16,7 +16,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { salvar, buscarImagem, uploadImagem } from '../../services/container-service';
-import { buscar } from '../../services/PatioImoServiceProvider';
+import { buscar } from '../../services/imo-service';
 import { TfcConteinerInspecaoIMODTO } from '../../models/TfcConteinerInspecaoIMODTO';
 
 const PatioImoScreen = ({ navigation, route }) => {
