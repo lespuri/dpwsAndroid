@@ -2,6 +2,8 @@ import { apiRequest } from './apiRequest-services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import RNFS from 'react-native-fs';
+import Upload from 'react-native-background-upload';
+
 //import * as FileSystem from 'expo-file-system';
 //import * as FileSystem from 'expo-file-system';
 
@@ -20,8 +22,12 @@ const getAuthToken = async () => {
   };
 
  export const salvar = async (container) => {
-  
+  try{
     return apiRequest('post', 'TfcConteinerInspecaoIMO/SalvarByGate', container);
+  }catch(err){
+    throw new Error(err);
+  }
+    
   };
 
   const checkFileSize = async (fileUri) => {
@@ -44,108 +50,37 @@ const getAuthToken = async () => {
 
   export const uploadImagem = async (container, imo, imagem) => {
     try {
-      if (!imagem.uri) {
-        console.log("Nenhuma imagem para enviar.");
-        return;
-      }
-      checkFileSize(imagem.uri);
-      const token = await getAuthToken();
-      const url = `http://www.embraportonline.com.br:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`;
+      const token = await AsyncStorage.getItem("userToken");
+      console.log("container.TFCCONTEINERINSPECAOID",  container.TFCCONTEINERINSPECAOID);
+      console.log("imo.UN",  imo.UN);
+      // Copiando o arquivo de content:// para um local temporário
+      const tempPath = `${RNFS.TemporaryDirectoryPath}/${Date.now()}.jpeg`;
+      await RNFS.copyFile(imagem.uri, tempPath);
   
-      const formData = new FormData();
-      console.log(imagem.uri);
-      // Anexa o arquivo ao formData
-      formData.append('file', {
-        uri: imagem.uri,
-        type: 'image/jpeg', // ou 'image/png' dependendo do tipo de imagem
-        name: `image_${container.TFCCONTEINERINSPECAOID}.jpg` // Nome da imagem que será enviada
-      });
-  
-      // Adiciona outros parâmetros, se necessário
-      formData.append('id', container.TFCCONTEINERINSPECAOID);
-      formData.append('un', imo.UN);
-  
-      const response = await axios.post(url, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: progressEvent => {
-          console.log(`Progress: ${(progressEvent.loaded / progressEvent.total) * 100}%`);
-        }
-      });
-  
-      console.log('Upload realizado com sucesso', response.data);
-    } catch (error) {
-      console.error('Erro no upload', error.response || error.message);
-    }
-  };
-
-  export const uploadImagemOld1 = async (container, imo, imagem) => {
-    if (!imagem.uri) {
-      return Promise.resolve();
-    }
-  
-    try {
-      const token = await getAuthToken();
-      const url = `http://www.embraportonline.com.br:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`;
-        
-      // Configura o cabeçalho e os dados para o envio
-      const formData = new FormData();
-      formData.append('file', {
-        uri: imagem.uri,
-        type: 'image/jpeg',
-        name: `${container.TFCCONTEINERINSPECAOID}_${imo.UN}.jpg`,
-      });
-  
-      const response = await axios({
+      const options = {
+        url: `http://187.60.22.181:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
+        path: tempPath,
         method: 'POST',
-        url: url,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-        data: formData,
-      });
+        field: 'file',
+        type: 'multipart',
+      };
   
-      console.log("Upload realizado com sucesso:", response.data);
-      return Promise.resolve();
-    } catch (error) {
-      console.log("Erro ao realizar upload:", error);
-      return Promise.reject(error);
-    }
-  };
-
-
-  export const uploadImagemOld = async (container, imo, imagem) => {
-    console.log("uploadImagem")
-    console.log("container", container);
-    console.log("imo", imo);
-    console.log("imagem", imagem);
-    if (!imagem.uri) {
-      return Promise.resolve();
-    }
-
-    const token = await getAuthToken();
-    const url = `http://www.embraportonline.com.br:8100/TfcConteinerInspecaoIMO/Upload?id=${container.TFCCONTEINERINSPECAOID}&imo=${imo.NROIMO}&un=${imo.UN}`;
-    const fileUri = imagem.uri;
-
-    const options = {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'image/jpeg',
-      },
-      httpMethod: 'POST',
-      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-    };
-
-    try {
-      const uploadResult = await FileSystem.uploadAsync(url, fileUri, options);
-      console.log("fileTransfer.upload Uploaded Successfully", uploadResult);
-      return Promise.resolve();
-    } catch (error) {
-      console.log("fileTransfer.upload erro", error);
-      return Promise.reject(error);
+      Upload.startUpload(options).then(uploadId => {
+        console.log('Upload started with id:', uploadId);
+  
+        Upload.addListener('error', uploadId, (data) => {
+          console.log(`Error: ${data.error}`)
+        });
+  
+      }).catch(err => {
+        console.error('Upload error:', err);
+      });
+    } catch (err) {
+      console.error('Error copying file or uploading:', err);
     }
   };
 

@@ -17,7 +17,7 @@ const PesquisarContainerScreen = () => {
   const [searchTriggered, setSearchTriggered] = useState(false);
   
   useEffect(() => {
-    setModelContainer('TOFU1234567');
+    setModelContainer('PRIU0010029');
     
   });
 
@@ -36,9 +36,9 @@ const PesquisarContainerScreen = () => {
 
       const performSearch = async () => {
         try {
-          console.log("payload consulta", updatedDto);
+          
           const result = await pesquisar(updatedDto); 
-          console.log(result);         
+          
           setTfcContainerInspecaoDto(result);
           
           const updatedInspecao = {
@@ -51,6 +51,7 @@ const PesquisarContainerScreen = () => {
           });
           
           setInspecao(updatedInspecao);
+          
           //Alert.alert('Success', 'Container encontrado!');
           navigation.navigate('MenuInspecao', updatedInspecao);
           

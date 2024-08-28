@@ -19,13 +19,15 @@ import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import PageGateHeader from './GateHeaderScreen';
 import {salvar } from '../../services/container-service';
 import { buscarLacre } from '../../services/lacre-service';
-import { buscarAvaria, buscarImagem } from '../../services/avarias-service';
+import { buscarAvaria, buscarImagem, uploadImagem } from '../../services/avarias-service';
 import AlertProvider from '../../services/Alert';
 import { _CAMERA_TARGET_HEIGHT, _CAMERA_TARGET_WIDTH, _AVARIA_PADRAO, _AVARIA_IGNORAR, _CAMERA_QUALITY } from '../../services/properties.service';
 import TfcConteinerInspecaoAvaria from '../../models/TfcConteinerInspecaoAvaria';
 import { TfcConteinerFinalizarInspecaoDTO } from '../../models/TfcConteinerFinalizarInspecaoDTO';
 import { DamageType } from '../../models/DamageType';
 import { ComponentModel } from '../../models/ComponentModel';
+import { launchImageLibrary, launchCamera  } from 'react-native-image-picker';
+import { uploadFiles } from 'react-native-fs';
 
 const GateAvariasScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
@@ -49,6 +51,12 @@ const GateAvariasScreen = ({ navigation, route }) => {
     buscarDadosApi();
   }, []);
 
+  useEffect(() => {
+    if (tipoL.length > 0 && componenteL.length > 0) {      
+      buscarDadosApiAvariaCompleta();
+    }
+  }, [tipoL, componenteL]);
+
   const presentLoading = () => {
     // Implement loading logic
   };
@@ -62,9 +70,10 @@ const GateAvariasScreen = ({ navigation, route }) => {
       
       if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO) {
         buscarDadosApi(); // Retry if data not loaded
-      } else {        
-        await prepararDadosLocal();
-        await buscarDadosApiAvariaCompleta();
+      } else {   
+        
+         await prepararDadosLocal();        
+         //buscarDadosApiAvariaCompleta();     
       }
     } catch (err) {
       // Handle error
@@ -79,17 +88,29 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
     inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO.TYPES.forEach(types => {
         const dt = new DamageType(types.ID, types.DESCRIPTION, types.CUSTDFF_REPORTDAMAGE);
-        tipos.push(dt);
+        tipos.push(dt);        
     });
 
     inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO.COMPONENTS.forEach(components => {
         componentes.push(new ComponentModel(components.ID, components.DESCRIPTION));
     });
+    
+    await setTipoL(tipos);    
+    await setComponenteL(componentes);
 
-    setTipoL(tipos);
-    setComponenteL(componentes);
-
+  // Verificação se os arrays foram preenchidos corretamente
+  if (tipos.length > 0 && componentes.length > 0) {
     setIsDemageReport(inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO.TFCCONTEINERINSPECAODTO.DAMAGEREPORT === 'Y');
+    
+    // Chama a função de busca completa apenas após garantir que os tipos estão carregados
+    //buscarDadosApiAvariaCompleta();
+  } else {
+    console.log("Erro: tipos ou componentes não carregados corretamente.");
+  }
+
+    
+
+    
   };
 
   const buscarDadosApiAvariaCompleta = async () => {
@@ -99,12 +120,12 @@ const GateAvariasScreen = ({ navigation, route }) => {
             
       avarias.forEach(element => {
         let type = tipoL.find(item => item.ID === element.TIPO);
-        let component = componenteL.find(item => item.ID === element.COMPONENTE);
+        let component = componenteL.find(item => item.ID === element.COMPONENTE);        
         
-        console.log("avarias.forEach > element.COMPONENTE", element.COMPONENTE);
         if (component) {
-          element.COMPONENTEDESCRICAO = component.DESCRIPTION;
+          element.COMPONENTEDESCRICAO = component.DESCRIPTION;          
         }
+
 
         if (type) {
           element.TIPODESCRICAO = type.DESCRIPTION;
@@ -113,6 +134,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
         buscarImagensApi(element);
       });
 
+      console.log("avarias", avarias)
       setTfcConteinerInspecaoAvariaL(avarias);
     } catch (err) {
       // Handle error
@@ -133,6 +155,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   };
 
   const adicionarAvaria = (isConfirmar = false) => {
+    
     if (tipoSelecionado && tipoSelecionado.ID && componenteSelecionado && componenteSelecionado.ID) {
       if (isDemageReport && (!imageNovaL || imageNovaL.length === 0)) {
         let isAvariaPadrao = verificarAvariaPadrao(tipoSelecionado.ID, componenteSelecionado.ID);
@@ -143,22 +166,22 @@ const GateAvariasScreen = ({ navigation, route }) => {
       } else {
         let type = tipoL.find(item => item.ID === tipoSelecionado.ID);
         let component = componenteL.find(item => item.ID === componenteSelecionado.ID);
-
+        
         let tfcConteinerInspecaoAvaria = new TfcConteinerInspecaoAvaria();
         tfcConteinerInspecaoAvaria.imagemL = imageNovaL;
         tfcConteinerInspecaoAvaria.COMPONENTE = component.ID;
         tfcConteinerInspecaoAvaria.COMPONENTEDESCRICAO = component.DESCRIPTION;
         tfcConteinerInspecaoAvaria.TIPO = type.ID;
         tfcConteinerInspecaoAvaria.TIPODESCRICAO = type.DESCRIPTION;
-
+        
         setTfcConteinerInspecaoAvariaL([...tfcConteinerInspecaoAvariaL, tfcConteinerInspecaoAvaria]);
 
         setTipoSelecionado(null);
         setComponenteSelecionado(null);
-        setImageNovaL([]);
-
+        //setImageNovaL([]);
+        
         if (isConfirmar) {
-          finalizarAvaria(isConfirmar);
+          //finalizarAvaria(isConfirmar);
         }
       }
     } else {
@@ -187,9 +210,13 @@ const GateAvariasScreen = ({ navigation, route }) => {
   };
 
   const finalizarAvaria = async (isConfirmar) => {
+    console.log("finalizarAvaria > isConfirmar", isConfirmar);
     if (!isConfirmar) {
       adicionarAvaria(true);
     } else {
+
+      
+
       let isAvariaSemImagem = false;
 
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO.TFCCONTEINERINSPECAODTO.DAMAGEREPORT = isDemageReport ? 'Y' : null;
@@ -197,6 +224,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO.NextAction = "Next";
 
       tfcConteinerInspecaoAvariaL.forEach(avaria => {
+        console.log("finalizarAvaria > isConfirmar > avaria", avaria);
         let isAvariaPadrao = verificarAvariaPadrao(avaria.TIPO, avaria.COMPONENTE);
         let isAvariaIgnorada = verificarAvariaIgnorada(avaria.TIPO, avaria.COMPONENTE);
 
@@ -215,6 +243,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
         const resultJson = JSON.stringify(inspecao.tfcConteinerFinalizarInspecaoDTO);
         
         await salvar(inspecao.tfcConteinerFinalizarInspecaoDTO);
+        await uploadFile()
         navegarProximaEtapa();
         
         /*
@@ -233,6 +262,29 @@ const GateAvariasScreen = ({ navigation, route }) => {
     setCurrentImageUrl(url);
     setModalVisible(true);
   };
+
+  // Função para capturar imagem da câmera
+const captureImageWithCamera = () => {
+  
+  
+  
+  const options = {
+    mediaType: 'photo',
+    saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
+  };
+
+  launchCamera(options, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled camera');
+    } else if (response.error) {
+      console.log('Camera Error: ', response.error);
+    } else {
+      const source = { uri: response.assets[0].uri };
+      //setPhoto(source);
+      setImageNovaL([...imageNovaL, { uri: `file://${source.uri}` }]);
+    }
+  });
+};
 
   const goToCamera = async () => {
     setCameraVisible(true);
@@ -266,7 +318,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
             for (const element of avaria.imagemL) {
               try {
-                await AvariaServiceProvider.uploadImagem(inspecao.tfcContainerInspecaoDto, avaria, element);
+                await uploadImagem(inspecao.tfcContainerInspecaoDto, avaria, element);
               } catch (err) {
                 console.log("this.uploadImagem ERRO", err);
                 isOccurredError = true;
@@ -375,7 +427,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
             </View>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={goToCamera}>
+              <TouchableOpacity style={styles.button} onPress={captureImageWithCamera}>
                 <Text style={styles.buttonText}>Adicionar Imagem</Text>
                 <Icon name="camera" size={24} color="#fff" />
               </TouchableOpacity>

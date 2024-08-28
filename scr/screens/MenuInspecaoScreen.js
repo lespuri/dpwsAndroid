@@ -20,9 +20,7 @@ const MenuInspecaoScreen = () => {
     const params = route.params;    
     if (params) {
       const inspecaoData = params;      
-      setInspecao(inspecaoData);
-
-      
+      setInspecao(inspecaoData);      
     }
 
     const handleKeyPress = (e) => {

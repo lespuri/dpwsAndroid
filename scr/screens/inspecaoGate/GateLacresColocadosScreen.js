@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import PageGateHeader from './GateHeaderScreen';
 import { buscarLacreColocado, salvarLacreColocado } from '../../services/lacre-colocado-service';
 import { TfcConteinerInspecaoLacreResumoDTO } from '../../models/TfcConteinerInspecaoLacreResumoDTO';
+import {  launchCamera  } from 'react-native-image-picker';
 
 const GateLacresColocadosScreen = ({ navigation, route }) => {  
   const { inspecao } = route.params;
@@ -91,6 +92,39 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
     }
   };
 
+  // Função para capturar imagem da câmera
+const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
+  console.log("index", index);
+  
+  setLacrePrevistoConfirmado(_lacrePrevistoColocado);
+  const options = {
+    mediaType: 'photo',
+    saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
+  };
+
+  launchCamera(options, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled camera');
+    } else if (response.error) {
+      console.log('Camera Error: ', response.error);
+    } else {
+      const source = { uri: response.assets[0].uri };
+      //setPhoto(source);
+      console.log("lacrePrevistoConfirmado", lacrePrevistoConfirmado);
+      if (_lacrePrevistoColocado
+      ){
+        const updatedLacres = [...lacrePrevistoConfirmadoL];
+        updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
+        setLacrePrevistoConfirmadoL(updatedLacres);  
+      }else{
+        const updatedLacres = [...outrosLacresL];
+        updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
+        setOutrosLacresL(updatedLacres);  
+
+      }    
+    }
+  });
+};
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
 

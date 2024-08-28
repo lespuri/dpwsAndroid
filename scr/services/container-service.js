@@ -55,13 +55,20 @@ export const finalizar = (container, reservaJanelaId) => {
 };
 
 export const editar = (container) => {
-  console.log("editar", container);
-  //return  mockConteinerServiceEditar(container);
-  return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
+  try{
+    return apiRequest('post', 'TfcConteinerInspecao/Editar', container);
+  }catch(err){
+    throw new Error(err);    
+  }
+  
 };
 
 export const salvarReefer = (container) => {
+ try{
   return apiRequest('post', 'TfcExcessoReefer/SalvarReefer', container);
+}catch(err){
+  throw new Error(err);    
+}
 };
 
 export const salvarExcesso = (container) => {
@@ -81,9 +88,17 @@ export const salvarEntrada = (container) => {
     GATE: container.GATE,
     DATAAGENDAMENTO: container.DTHRINIJANELA,
   };
+ try{ 
   return apiRequest('post', 'TfcPreGate/GravarEntrada', tfcPreGate);
+}catch(err){
+  throw new Error(err);    
+}
 };
 
 export const pesquisarEntradas = (container) => {
+ try{ 
   return apiRequest('get', `TfcPreGate/VerificaTickets?placa=${container.PLACA}`);
+}catch(err){
+  throw new Error(err);    
+}
 };

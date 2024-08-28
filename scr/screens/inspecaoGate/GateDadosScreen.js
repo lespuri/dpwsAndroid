@@ -26,6 +26,7 @@ const GateDadosScreen = () => {
   ];
 
   useEffect(() => {
+    console.log("use", inspecao.tfcContainerInspecaoDto);
     if (inspecao.tfcContainerInspecaoDto.LONGARINA) {
       const longarina = longarinaOptions.find(option => parseInt(option.id) === parseInt(inspecao.tfcContainerInspecaoDto.LONGARINAENUM));
       setLongarinaSelecionado(longarina || longarinaOptions[0]);
@@ -91,13 +92,13 @@ const GateDadosScreen = () => {
         <TextInput
           style={styles.input}
           placeholder="TARA"
-          value={inspecao.tfcContainerInspecaoDto.TARA}
+          value={inspecao.tfcContainerInspecaoDto.TARA.toString()}
           onChangeText={(text) => setInspecao({ ...inspecao, tfcContainerInspecaoDto: { ...inspecao.tfcContainerInspecaoDto, TARA: text } })}
         />
         <TextInput
           style={styles.input}
           placeholder="SAFE WEIGHT"
-          value={inspecao.tfcContainerInspecaoDto.SAFEWEIGHT}
+          value={inspecao.tfcContainerInspecaoDto.SAFEWEIGHT.toString()}
           onChangeText={(text) => setInspecao({ ...inspecao, tfcContainerInspecaoDto: { ...inspecao.tfcContainerInspecaoDto, SAFEWEIGHT: text } })}
         />
 

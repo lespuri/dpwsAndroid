@@ -18,7 +18,7 @@ import {salvar} from '../../services/container-service'
 import {buscarLacre, buscarDadosCompletoLacre, uploadImagem, buscarImagemLacre} from '../../services/lacre-service'
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { launchImageLibrary, launchCamera  } from 'react-native-image-picker';
 
 
 const GateLacresScreen = ({ navigation, route }) => {
@@ -134,7 +134,6 @@ const GateLacresScreen = ({ navigation, route }) => {
     buscarDadosCompletoApi();
   };
   
-
   const buscarDadosCompletoApi = async () => {
     try {
       
@@ -172,13 +171,64 @@ const GateLacresScreen = ({ navigation, route }) => {
     }
   };
 
-
   const goToCamera = (item, index, _lacrePrevistoColocado) => {
     console.log("index", index);
     setCurrentImageIndex(index );
     setCameraVisible(true);
     setLacrePrevistoConfirmado(_lacrePrevistoColocado);
   };
+
+  const selectImage = () => {
+    console.log("selectImage", selectImage);
+    const options = {
+      mediaType: 'photo',
+    };
+
+    launchImageLibrary(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else {
+        const source = { uri: response.assets[0].uri };
+        setPhoto(source);
+      }
+    });
+  };
+
+// Função para capturar imagem da câmera
+const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
+  console.log("index", index);
+  
+  setLacrePrevistoConfirmado(_lacrePrevistoColocado);
+  const options = {
+    mediaType: 'photo',
+    saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
+  };
+
+  launchCamera(options, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled camera');
+    } else if (response.error) {
+      console.log('Camera Error: ', response.error);
+    } else {
+      const source = { uri: response.assets[0].uri };
+      //setPhoto(source);
+      console.log("lacrePrevistoConfirmado", lacrePrevistoConfirmado);
+      if (_lacrePrevistoColocado
+      ){
+        const updatedLacres = [...lacrePrevistoConfirmadoL];
+        updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
+        setLacrePrevistoConfirmadoL(updatedLacres);  
+      }else{
+        const updatedLacres = [...outrosLacresL];
+        updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
+        setOutrosLacresL(updatedLacres);  
+
+      }    
+    }
+  });
+};
 
   const capturePhoto = async () => {
     try{
@@ -314,7 +364,7 @@ const GateLacresScreen = ({ navigation, route }) => {
       let isOccurredError = false;
       let isHasImage = false;
       const imagemUploadL = [...outrosLacresL, ...getLacreConfirmado()];
-
+      console.log("imagemUploadL", imagemUploadL);
       for (const lacre of imagemUploadL) {
         if (isLacreImagem(lacre)) {
           isHasImage = true;
@@ -366,7 +416,9 @@ const GateLacresScreen = ({ navigation, route }) => {
                 <Icon name="close" size={24} color="red" onPress={() => handleConfirmarLacre(item)} />
               )}
               {!item.imagem?.uri && (
-                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item,  index, true)} />
+                /* <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item,  index, true)} />*/
+                <Icon name="camera" size={24} color="blue" onPress={ () => captureImageWithCamera(index, true)} />
+                
               )}
               {item.imagem?.uri && (
                 <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>
@@ -397,7 +449,7 @@ const GateLacresScreen = ({ navigation, route }) => {
                 }}
               />
               {!item.imagem?.uri && (
-                <Icon name="camera" size={24} color="blue" onPress={() => goToCamera(item, index, false)} />
+                <Icon name="camera" size={24} color="blue" onPress={ () => captureImageWithCamera(index, false)} />
               )}
               {item.imagem?.uri && (
                 <TouchableOpacity onPress={() => showModal(index, item.imagem.uri)}>

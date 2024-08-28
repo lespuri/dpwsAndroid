@@ -19,6 +19,7 @@ import { salvar, buscar, buscarImagem, uploadImagem } from '../../services/imo-s
 import TfcConteinerInspecaoIMODTO from '../../models/TfcConteinerInspecaoIMODTO';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
+import {  launchCamera  } from 'react-native-image-picker';
 
 const GateImoScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
@@ -59,6 +60,7 @@ const GateImoScreen = ({ navigation, route }) => {
     setImoConfirmadoL([]);
     result.forEach(async (value) => {
         const resultIm = await buscarImagem(value.TFCCONTEINERINSPECAOIMOID);
+        console.log("resultIm", resultIm);
       setImoConfirmadoL(prevState => [
         ...prevState,
         { UN: value.UN, IMO: value.NROIMO, TFCCONTEINERINSPECAOIMOID: value.TFCCONTEINERINSPECAOIMOID, imagemL: resultIm }
@@ -122,7 +124,7 @@ const onAdd = async () => {
         
         await buscarDadosApi();
         // Upload de arquivos
-        await uploadImagem(inspecao.tfcContainerInspecaoDto, result, imageNovaL[0]);
+        await uploadImagem(inspecao.tfcContainerInspecaoDto, inspecao.tfcConteinerInspecaoIMODTO, imageNovaL[0]);
   //(container, imo, imagem)
         setModelUn('');
         setImageNovaL([]);
@@ -131,7 +133,7 @@ const onAdd = async () => {
         console.log("ERRO", err);
         Alert.alert("Atenção", err.toString());
       } finally {
-        dismissLoading();
+        //dismissLoading();
       }
     }
   };
@@ -169,6 +171,27 @@ const onAdd = async () => {
     //setImoConfirmadoL(imoConfirmadoL.filter(item => item !== imo));
     setImageNovaL(prevImages => prevImages.filter((_, i) => i !== index));
   };
+
+// Função para capturar imagem da câmera
+const captureImageWithCamera = () => {
+  const options = {
+    mediaType: 'photo',
+    saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
+  };
+
+  launchCamera(options, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled camera');
+    } else if (response.error) {
+      console.log('Camera Error: ', response.error);
+    } else {
+      const source = { uri: response.assets[0].uri };
+      //setPhoto(source);
+      setImageNovaL([...imageNovaL, { uri: source.uri }]);
+            
+    }
+  });
+};
 
   const goToCamera = async () => {
     setCameraVisible(true);
@@ -250,7 +273,7 @@ const onAdd = async () => {
               onChangeText={setModelUn}
             />
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={goToCamera}>
+              <TouchableOpacity style={styles.button} onPress={captureImageWithCamera}>
                 <Text style={styles.buttonText}>Fotos</Text>
                 <Icon name="camera" size={24} color="#fff" />
               </TouchableOpacity>
