@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Keyboard } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Keyboard, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { finalizar } from '../services/container-service';
 //import PatioImoServiceProvider from '../services/patio-imo-service';
@@ -8,6 +8,7 @@ import { KDTipo } from '../enum/KDTipo';
 import BaseModel from '../models/BaseModel';
 import AlertService from '../services/Alert';
 import {buscar} from '../services/imo-service';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const MenuInspecaoScreen = () => {
   const [inspecao, setInspecao] = useState({});
@@ -15,6 +16,7 @@ const MenuInspecaoScreen = () => {
   const navigation = useNavigation();
   const { presentLoading, dismissLoading, presentToast } = BaseModel();
   const { present, presentErr } = AlertService();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const params = route.params;    
@@ -106,20 +108,22 @@ const MenuInspecaoScreen = () => {
   };
 
   const onFinalizar = async () => {
+    setLoading(true);
     inspecao.tfcContainerInspecaoDto.TIPO = inspecao.tipo;
     inspecao.tfcContainerInspecaoDto.TIPOENUM = KDTipo[inspecao.tipo];
     
-    presentLoading();
+    
     try {
       console.log("finalizar");
       const result = await finalizar(inspecao.tfcContainerInspecaoDto, inspecao.reservaSelecionada?.RESERVAJANELAID || 0);
       
       //dismissLoading();
-      navigation.popToTop();
+      //navigation.popToTop();
       if (inspecao.tipo === KDTipo.kdInspecaoGate) {
         present("Inspecão finalizada com sucesso", "", []);
         setTimeout(() => {
-          navigation.navigate('Home');
+          setLoading(false);
+          navigation.navigate('Menu');
         }, 1000);
       } else {
         if (result.length > 0) {
@@ -127,12 +131,14 @@ const MenuInspecaoScreen = () => {
             present("Atenção", element.astMessage, []);
           });
         }
-        navigation.navigate('Home');
+        navigation.navigate('Menu');
       }
     } catch (error) {
       //dismissLoading();
       console.error(error);
       presentErr("Atenção", error.toString(), []);
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -149,6 +155,7 @@ const MenuInspecaoScreen = () => {
       />
       <TouchableOpacity style={styles.finalizeButton} onPress={onValidarFinalizar}>
         <Text style={styles.finalizeButtonText}>Finalizar</Text>
+        {loading ? <ActivityIndicator color="#fff" /> : <Icon name="check-circle" size={20} color="#fff" />}
       </TouchableOpacity>
     </View>
   );
@@ -174,10 +181,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   finalizeButtonText: {
     color: '#fff',
     fontSize: 16,
+    marginRight: 8,
   },
 });
 

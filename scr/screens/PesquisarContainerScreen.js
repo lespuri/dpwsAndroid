@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { pesquisar } from '../services/container-service';
 import { TfcConteinerInspecaoDTO } from '../models/TfcConteinerInspecaoDTO';
 import { Inspecao } from '../models/inspecao.model';
 import { INSPECAO_CHECKLIST } from '../utils/constants.page';  // Importar a constante
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const PesquisarContainerScreen = () => {
   const route = useRoute();
@@ -15,7 +16,8 @@ const PesquisarContainerScreen = () => {
   const [tfcContainerInspecaoDto, setTfcContainerInspecaoDto] = useState(new TfcConteinerInspecaoDTO());
   const [inspecao, setInspecao] = useState(inspecaoData);
   const [searchTriggered, setSearchTriggered] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     setModelContainer('PRIU0010029');
     
@@ -36,7 +38,7 @@ const PesquisarContainerScreen = () => {
 
       const performSearch = async () => {
         try {
-          
+          setLoading(true);
           const result = await pesquisar(updatedDto); 
           
           setTfcContainerInspecaoDto(result);
@@ -60,6 +62,7 @@ const PesquisarContainerScreen = () => {
           Alert.alert('Atenção', ex.message);
         } finally {
           setSearchTriggered(false);
+          setLoading(false);
         }
       };
 
@@ -107,6 +110,7 @@ const PesquisarContainerScreen = () => {
       />
       <TouchableOpacity style={styles.button} onPress={handlePesquisar}>
         <Text style={styles.buttonText}>Pesquisar</Text>
+        {loading ? <ActivityIndicator color="#fff" /> : <Icon name="search" size={20} color="#fff" />}
       </TouchableOpacity>
     </View>
   );
@@ -135,10 +139,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+    marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
+    marginRight: 8,
   },
 });
 

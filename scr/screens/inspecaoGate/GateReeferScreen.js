@@ -42,7 +42,7 @@ const GateReeferScreen = ({ navigation, route }) => {
     inspecao.tfcContainerInspecaoDto = { ...new TfcConteinerInspecaoDTO(), ...result };
     console.log("inspecao.tfcContainerInspecaoDto.CESETTING", inspecao.tfcContainerInspecaoDto.CESETTING);    
     setGenset(inspecao.tfcContainerInspecaoDto.GENSET);
-    const temperatureString = inspecao.tfcContainerInspecaoDto.CESETTING.toString();
+    const temperatureString = inspecao.tfcContainerInspecaoDto.CESETTING?.toString();
     setTemperature(temperatureString);
 
     if (!inspecao.tfcContainerInspecaoDto.CESETTING && inspecao.tfcContainerInspecaoDto.CESETTING !== "") {
