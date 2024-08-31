@@ -19,10 +19,11 @@ import {buscarLacre, buscarDadosCompletoLacre, uploadImagem, buscarImagemLacre} 
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
 import { launchImageLibrary, launchCamera  } from 'react-native-image-picker';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-
-const GateLacresScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+const GateLacresScreen = ({ navigation }) => {
+  const route = useRoute();
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [lacrePrevistoConfirmadoL, setLacrePrevistoConfirmadoL] = useState([]);
   const [outrosLacresL, setOutrosLacresL] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,6 +32,7 @@ const GateLacresScreen = ({ navigation, route }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
   const [lacrePrevistoConfirmado, setLacrePrevistoConfirmado] = useState(null);
   const cameraRef = useRef(null);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   const devices = useCameraDevices();
   const device = devices.back || devices.find(dev => dev.position === 'back');
@@ -42,6 +44,13 @@ const GateLacresScreen = ({ navigation, route }) => {
     requestCameraPermission();
   }, []);
 
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
+
+  }, [inspecao]);
   const requestCameraPermission = async () => {
     const permission = await Camera.getCameraPermissionStatus();
     console.log(permission);
@@ -381,8 +390,19 @@ const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
       }
 
       if (!isOccurredError) {
-        navigation.navigate('MenuInspecao', { inspecao });
-      }
+        const updatedMenuL = inspecao.checklist.menuL.map(item => {
+          if (item.page == "GateLacres") {
+            return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+          }
+          return item;
+        });
+    
+        setShouldNavigate(true);
+        setInspecao(prevInspecao => ({
+              ...prevInspecao,
+              checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+            }));
+          }
     } catch (err) {
       console.log("ERRO", err);
       Alert.alert("Atenção", err.message);

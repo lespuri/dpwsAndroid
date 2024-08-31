@@ -17,7 +17,7 @@ import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
 import { KDTipo } from '../../enum/KDTipo';
 
 const ServicoExcessoScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [altura, setAltura] = useState('');
   const [direita, setDireita] = useState('');
   const [esquerda, setEsquerda] = useState('');
@@ -26,6 +26,7 @@ const ServicoExcessoScreen = ({ navigation, route }) => {
   const [iop, setIop] = useState(false);
   const [loading, setLoading] = useState(false);
   const alturaInputRef = useRef(null);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {
     // Fixando o tipo serviços
@@ -41,6 +42,13 @@ const ServicoExcessoScreen = ({ navigation, route }) => {
     buscarDadosApi();
   }, []);
 
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
+
+  }, [inspecao]);
   const presentLoading = async () => {
     setLoading(true);
   };
@@ -77,7 +85,22 @@ const ServicoExcessoScreen = ({ navigation, route }) => {
     
     try{
       await salvarExcesso(inspecao.tfcContainerInspecaoDto);
-      navigation.navigate('MenuInspecao', { inspecao });
+      
+      const updatedMenuL = inspecao.checklist.menuL.map(item => {
+        if (item.page == "ServicoExcesso") {
+          return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+        }
+        return item;
+      });
+  
+      setShouldNavigate(true);
+      setInspecao(prevInspecao => ({
+            ...prevInspecao,
+            checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+          }));
+
+      
+      //navigation.navigate('MenuInspecao', { inspecao });
     }catch(err){
       //console.error(err);
       Alert.alert("Erro", err.message);

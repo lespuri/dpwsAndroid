@@ -18,13 +18,14 @@ import SelectDropdown from 'react-native-select-dropdown';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import {salvar } from '../../services/container-service';
 import { buscarLacre } from '../../services/lacre-service';
-import { buscarAvaria } from '../../services/avarias-service';
+import { buscarAvaria, buscarImagem, uploadImagem } from '../../services/avarias-service';
 import AlertProvider from '../../services/Alert';
 import { _CAMERA_TARGET_HEIGHT, _CAMERA_TARGET_WIDTH, _AVARIA_PADRAO, _AVARIA_IGNORAR, _CAMERA_QUALITY } from '../../services/properties.service';
 import TfcConteinerInspecaoAvaria from '../../models/TfcConteinerInspecaoAvaria';
 import { TfcConteinerFinalizarInspecaoDTO } from '../../models/TfcConteinerFinalizarInspecaoDTO';
 import { DamageType } from '../../models/DamageType';
 import { ComponentModel } from '../../models/ComponentModel';
+import {  launchCamera  } from 'react-native-image-picker';
 
 const PatioAvariasScreen = ({ navigation, route }) => {
   const { inspecao } = route.params;
@@ -47,21 +48,29 @@ const PatioAvariasScreen = ({ navigation, route }) => {
     presentLoading();
     buscarDadosApi();
   }, []);
+  
+  useEffect(() => {
+    if (tipoL.length > 0 && componenteL.length > 0) {      
+      buscarDadosApiAvariaCompleta();
+    }
+  }, [tipoL, componenteL]);
 
   const presentLoading = () => {
     // Implement loading logic
   };
 
   const buscarDadosApi = async () => {
-    try {
+    try {      
       const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
-      inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
+      //inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
       
+      inspecao.tfcConteinerFinalizarInspecaoDTO = { ...new TfcConteinerFinalizarInspecaoDTO(), ...result };
+
       if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO) {
         buscarDadosApi(); // Retry if data not loaded
       } else {        
         prepararDadosLocal();
-        buscarDadosApiAvariaCompleta();
+        //buscarDadosApiAvariaCompleta();
       }
     } catch (err) {
       // Handle error
@@ -119,7 +128,7 @@ const PatioAvariasScreen = ({ navigation, route }) => {
 
   const buscarImagensApi = async (avaria) => {
     try {
-      const result = await AvariaServiceProvider.buscarImagem(avaria);
+      const result = await buscarImagem(avaria);
       avaria.imagemL = result;
     } catch (err) {
       // Handle error
@@ -224,6 +233,29 @@ const PatioAvariasScreen = ({ navigation, route }) => {
     setModalVisible(true);
   };
 
+  // Função para capturar imagem da câmera
+  const captureImageWithCamera = () => {
+  
+  
+  
+    const options = {
+      mediaType: 'photo',
+      saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
+    };
+  
+    launchCamera(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled camera');
+      } else if (response.error) {
+        console.log('Camera Error: ', response.error);
+      } else {
+        const source = { uri: response.assets[0].uri };
+        //setPhoto(source);
+        setImageNovaL([...imageNovaL, { uri: `${source.uri}` }]);
+      }
+    });
+  };
+  
   const goToCamera = async () => {
     setCameraVisible(true);
   };
@@ -256,7 +288,7 @@ const PatioAvariasScreen = ({ navigation, route }) => {
 
             for (const element of avaria.imagemL) {
               try {
-                await AvariaServiceProvider.uploadImagem(inspecao.tfcContainerInspecaoDto, avaria, element);
+                await uploadImagem(inspecao.tfcContainerInspecaoDto, avaria, element);
               } catch (err) {
                 console.log("this.uploadImagem ERRO", err);
                 isOccurredError = true;
@@ -365,7 +397,7 @@ const PatioAvariasScreen = ({ navigation, route }) => {
             </View>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={goToCamera}>
+              <TouchableOpacity style={styles.button} onPress={captureImageWithCamera}>
                 <Text style={styles.buttonText}>Adicionar Imagem</Text>
                 <Icon name="camera" size={24} color="#fff" />
               </TouchableOpacity>
@@ -403,8 +435,8 @@ const PatioAvariasScreen = ({ navigation, route }) => {
             {item.imagemL && item.imagemL.length > 0 && (
               <View style={styles.imageGrid}>
                 {item.imagemL.map((imagem, index) => (
-                  <TouchableOpacity key={index} onPress={() => showModal(index, imagem.url)}>
-                    <Image source={{ uri: imagem.url }} style={styles.image} />
+                  <TouchableOpacity key={index} onPress={() => showModal(index, imagem.uri)}>
+                    <Image source={{ uri: imagem.uri }} style={styles.image} />
                   </TouchableOpacity>
                 ))}
               </View>

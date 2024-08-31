@@ -16,15 +16,24 @@ import { pesquisar, salvarReefer } from '../../services/container-service';
 import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
 
 const GateReeferScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [loading, setLoading] = useState(false);
   const [temperature, setTemperature] = useState('');  
   const [genset, setGenset] = useState('');
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {
     buscarDadosApi();
   }, []);
-  
+   
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
+
+  }, [inspecao]);
+
   
   const presentLoading = async () => {
     setLoading(true);
@@ -62,7 +71,22 @@ const GateReeferScreen = ({ navigation, route }) => {
       inspecao.tfcContainerInspecaoDto.GENSET = genset;
 
       salvarReefer(inspecao.tfcContainerInspecaoDto).then((result) => {
-        navigation.navigate('MenuInspecao', { inspecao });
+        //navigation.navigate('MenuInspecao', { inspecao });
+
+        const updatedMenuL = inspecao.checklist.menuL.map(item => {
+          if (item.page == "GateReefer") {
+            return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+          }
+          return item;
+        });
+    
+        setShouldNavigate(true);
+        setInspecao(prevInspecao => ({
+              ...prevInspecao,
+              checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+            }));
+
+
         dismissLoading();
       }).catch((err) => {
         dismissLoading();

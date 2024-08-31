@@ -17,9 +17,10 @@ import { TfcConteinerInspecaoLacreResumoDTO } from '../../models/TfcConteinerIns
 import {  launchCamera  } from 'react-native-image-picker';
 
 const GateLacresColocadosScreen = ({ navigation, route }) => {  
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [colocadosLacresL, setColocadosLacresL] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {
     console.log("buscarDadosApi", inspecao);
@@ -29,7 +30,13 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
       // Cleanup if necessary
     };
   }, []);
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
 
+  }, [inspecao]);
   const presentLoading = async () => {
     setLoading(true);
   };
@@ -81,8 +88,22 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
       const result =  await salvarLacreColocado(inspecao.tfcConteinerInspecaoLacreResumoDTO);
       console.log("Salvamento com sucesso:", result);
   
+
+      const updatedMenuL = inspecao.checklist.menuL.map(item => {
+        if (item.page == "GateLacresColocados") {
+          return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+        }
+        return item;
+      });
+  
+      setShouldNavigate(true);
+      setInspecao(prevInspecao => ({
+            ...prevInspecao,
+            checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+          }));        
+      
       // Navegação após o sucesso
-      navigation.navigate('MenuInspecao', { inspecao });
+      //navigation.navigate('MenuInspecao', { inspecao });
   
     } catch (err) {
       console.log("ERRO", err);

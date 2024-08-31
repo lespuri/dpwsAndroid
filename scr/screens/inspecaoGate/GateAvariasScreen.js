@@ -30,7 +30,7 @@ import { launchImageLibrary, launchCamera  } from 'react-native-image-picker';
 import { uploadFiles } from 'react-native-fs';
 
 const GateAvariasScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [isDemageReport, setIsDemageReport] = useState(false);
   const [imageNovaL, setImageNovaL] = useState([]);
   const [tipoSelecionado, setTipoSelecionado] = useState(null);
@@ -45,6 +45,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   const cameraRef = useRef(null);
   const devices = useCameraDevices();
   const device = devices.back || devices.find(dev => dev.position === 'back');
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {
     presentLoading();
@@ -56,6 +57,14 @@ const GateAvariasScreen = ({ navigation, route }) => {
       buscarDadosApiAvariaCompleta();
     }
   }, [tipoL, componenteL]);
+
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
+
+  }, [inspecao]);
 
   const presentLoading = () => {
     // Implement loading logic
@@ -155,7 +164,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   };
 
   const adicionarAvaria = (isConfirmar = false) => {
-    
+    console.log("adicionarAvaria", imageNovaL);
     if (tipoSelecionado && tipoSelecionado.ID && componenteSelecionado && componenteSelecionado.ID) {
       if (isDemageReport && (!imageNovaL || imageNovaL.length === 0)) {
         let isAvariaPadrao = verificarAvariaPadrao(tipoSelecionado.ID, componenteSelecionado.ID);
@@ -178,7 +187,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
         setTipoSelecionado(null);
         setComponenteSelecionado(null);
-        //setImageNovaL([]);
+        setImageNovaL([]);
         
         if (isConfirmar) {
           //finalizarAvaria(isConfirmar);
@@ -281,7 +290,7 @@ const captureImageWithCamera = () => {
     } else {
       const source = { uri: response.assets[0].uri };
       //setPhoto(source);
-      setImageNovaL([...imageNovaL, { uri: `file://${source.uri}` }]);
+      setImageNovaL([...imageNovaL, { uri: `${source.uri}` }]);
     }
   });
 };
@@ -337,7 +346,21 @@ const captureImageWithCamera = () => {
   };
 
   const navegarProximaEtapa = () => {
-    navigation.navigate('MenuInspecao', { inspecao });
+    const updatedMenuL = inspecao.checklist.menuL.map(item => {
+      if (item.page.includes("GateAvarias")) {
+        return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+      }
+      return item;
+    });
+console.log("updatedMenuL", updatedMenuL);
+setShouldNavigate(true);
+setInspecao(prevInspecao => ({
+      ...prevInspecao,
+      checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+    }));
+    console.log("updatedMenuL > inspecao", inspecao);
+    
+    //navigation.replace('MenuInspecao', { inspecao });
   };
 
   return (
@@ -438,8 +461,9 @@ const captureImageWithCamera = () => {
             </View>
 
             {imageNovaL && imageNovaL.length > 0 && (
+              
               <View style={styles.imageGrid}>
-                {imageNovaL.map((imagem, index) => (
+                {imageNovaL.map((imagem, index) => (                  
                   <View key={index} style={styles.imageContainer}>
                     <TouchableOpacity onPress={() => showModal(index, imagem.uri)}>
                       <Image source={{ uri: imagem.uri }} style={styles.image} />
@@ -465,8 +489,8 @@ const captureImageWithCamera = () => {
             {item.imagemL && item.imagemL.length > 0 && (
               <View style={styles.imageGrid}>
                 {item.imagemL.map((imagem, index) => (
-                  <TouchableOpacity key={index} onPress={() => showModal(index, imagem.url)}>
-                    <Image source={{ uri: imagem.url }} style={styles.image} />
+                  <TouchableOpacity key={index} onPress={() => showModal(index, imagem.uri)}>
+                    <Image source={{ uri: imagem.uri }} style={styles.image} />
                   </TouchableOpacity>
                 ))}
               </View>

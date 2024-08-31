@@ -18,15 +18,22 @@ import { TfcConteinerInspecaoDTO } from '../../models/TfcConteinerInspecaoDTO';
 //TfcConteinerInspecaoDTO
 
 const GateServicosScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [opcaoL, setOpcaoL] = useState([]);
   const [servicoSelecionado, setServicoSelecionado] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {    
     buscarOpcaoApi();
   }, []);
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
 
+  }, [inspecao]);
   const presentLoading = () => {
     setLoading(true);
   };
@@ -129,7 +136,22 @@ const GateServicosScreen = ({ navigation, route }) => {
   };
 
   const finalizarServico = () => {
-    navigation.navigate('MenuInspecao', { inspecao });
+    
+    const updatedMenuL = inspecao.checklist.menuL.map(item => {
+      if (item.page == "GateServicos") {
+        return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+      }
+      return item;
+    });
+
+    setShouldNavigate(true);
+    setInspecao(prevInspecao => ({
+          ...prevInspecao,
+          checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+        }));
+
+
+    //navigation.navigate('MenuInspecao', { inspecao });
   };
 
   return (

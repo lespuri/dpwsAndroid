@@ -1,4 +1,4 @@
-class TfcConteinerInspecaoIMODTO {
+export class TfcConteinerInspecaoIMODTO {
     constructor() {
       this.PrevAction = '';
       this.NextAction = '';

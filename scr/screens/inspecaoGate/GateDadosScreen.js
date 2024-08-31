@@ -16,6 +16,7 @@ const GateDadosScreen = () => {
   const [longarinaSelecionado, setLongarinaSelecionado] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   const longarinaOptions = [
     { id: "99", label: '" "' },
@@ -26,16 +27,26 @@ const GateDadosScreen = () => {
   ];
 
   useEffect(() => {
-    console.log("use", inspecao.tfcContainerInspecaoDto);
     if (inspecao.tfcContainerInspecaoDto.LONGARINA) {
       const longarina = longarinaOptions.find(option => parseInt(option.id) === parseInt(inspecao.tfcContainerInspecaoDto.LONGARINAENUM));
       setLongarinaSelecionado(longarina || longarinaOptions[0]);
     } else {
       setLongarinaSelecionado(longarinaOptions[0]);
     }
+    console.log("shouldNavigate");
+    console.log("shouldNavigate > valor", shouldNavigate);
+    if (shouldNavigate) {
+      navigation.replace('MenuInspecao', inspecao);
+      setShouldNavigate(false); // Reseta o estado para evitar navegações repetidas
+    }
+
+
   }, [inspecao]);
 
   const handleConfirmar = async () => {
+    
+    //const filtered = inspecao.checklist.menuL.filter(item => item.page.includes('GateDados'));
+        
     setLoading(true);
     try {
       if (longarinaSelecionado && longarinaSelecionado.id) {
@@ -45,10 +56,25 @@ const GateDadosScreen = () => {
       
       const result = await editar(inspecao.tfcContainerInspecaoDto);
       
-      setInspecao({ ...inspecao, tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result) });
+      const updatedMenuL = inspecao.checklist.menuL.map(item => {
+        if (item.page.includes("GateDados")) {
+          return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+        }
+        return item;
+      });
+  
+      setShouldNavigate(true);
+      setInspecao(prevInspecao => ({
+        ...prevInspecao,
+        checklist: { 
+          ...prevInspecao.checklist, 
+          menuL: updatedMenuL 
+        },
+        tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
+      }));      
+      //console.log(inspecao);
       
-      console.log(inspecao);
-      navigation.navigate('MenuInspecao', inspecao);
+      //navigation.navigate('MenuInspecao', inspecao);
       
     } catch (error) {
       console.log("editar Dado", error);

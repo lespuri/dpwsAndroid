@@ -40,8 +40,11 @@ export const uploadImagem = async (container, avaria, imagem) => {
     const tempPath = `${RNFS.TemporaryDirectoryPath}/${Date.now()}.jpeg`;
     await RNFS.copyFile(imagem.uri, tempPath);
 
-    const options = {
+    const options = {      
       url: `http://187.60.22.181:8100/TfcConteinerInspecaoAvaria/Upload?id=${container.TFCCONTEINERINSPECAOID}&component=${avaria.COMPONENTE}&type=${avaria.TIPO}`,
+      //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoAvaria/Upload?id=${container.TFCCONTEINERINSPECAOID}&component=${avaria.COMPONENTE}&type=${avaria.TIPO}`,
+      //url: `https://api.dpworldsantos.com/TfcConteinerInspecaoAvaria/Upload?id=${container.TFCCONTEINERINSPECAOID}&component=${avaria.COMPONENTE}&type=${avaria.TIPO}`,
+
       path: tempPath,
       method: 'POST',
       headers: {

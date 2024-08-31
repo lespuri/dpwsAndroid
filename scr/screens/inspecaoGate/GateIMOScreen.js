@@ -22,7 +22,7 @@ import RNFS from 'react-native-fs';
 import {  launchCamera  } from 'react-native-image-picker';
 
 const GateImoScreen = ({ navigation, route }) => {
-  const { inspecao } = route.params;
+  const [inspecao, setInspecao] = useState(route.params.inspecao);
   const [modelUn, setModelUn] = useState('');
   const [imoConfirmadoL, setImoConfirmadoL] = useState([]);
   const [cameraVisible, setCameraVisible] = useState(false);
@@ -32,7 +32,7 @@ const GateImoScreen = ({ navigation, route }) => {
   const cameraRef = useRef(null);
   const devices = useCameraDevices();
   const device = devices.back || devices.find(dev => dev.position === 'back');
-  
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   useEffect(() => {
     
@@ -43,7 +43,13 @@ const GateImoScreen = ({ navigation, route }) => {
       // Cleanup if necessary
     };
   }, []);
-
+  
+  useEffect(() => {
+    if(shouldNavigate)  {
+      navigation.replace('MenuInspecao', inspecao);    
+      setShouldNavigate(false);
+    }
+  }, [inspecao]);
   const requestCameraPermission = async () => {
     const permission = await Camera.getCameraPermissionStatus();
     console.log(permission);
@@ -241,9 +247,22 @@ const captureImageWithCamera = () => {
   const confirmarImo = async () => {
     try {
       const dto = imoConfirmadoL; // new TfcConteinerInspecaoIMODTO();
-      console.log("imo", inspecao);
+      
       await salvar(dto);
-      navigation.navigate('MenuInspecao', { inspecao });
+
+      const updatedMenuL = inspecao.checklist.menuL.map(item => {
+        if (item.page.includes("GateIMO")) {
+          return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+        }
+        return item;
+      });
+  
+      setShouldNavigate(true);
+      setInspecao(prevInspecao => ({
+            ...prevInspecao,
+            checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+          }));
+        
     } catch (err) {
       Alert.alert("Erro", err.toString());
     }

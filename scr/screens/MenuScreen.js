@@ -61,8 +61,9 @@ const fetchData = async (setMenuItems) => {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      //url: 'http://www.embraportonline.com.br:8100/TsaMenu/Get',
+      //url: 'https://api.dpworldsantos.com/TsaMenu/Get',
       url: 'http://187.60.22.181:8100/TsaMenu/Get',
+      //url: 'http://qa.embraportonline.com.br:8100/TsaMenu/Get',
       headers: { 
         'Authorization': 'Bearer ' + token
       }

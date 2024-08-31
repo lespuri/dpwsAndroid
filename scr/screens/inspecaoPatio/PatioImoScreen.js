@@ -37,9 +37,10 @@ const PatioImoScreen = ({ navigation, route }) => {
 
   const buscarDadosApi = async () => {
     try {
+      
       const result = await buscar(inspecao.tfcContainerInspecaoDto);
       const imoDbL = [...result];
-
+      
       const confirmados = [];
       const aguardando = [];
 
@@ -56,11 +57,15 @@ const PatioImoScreen = ({ navigation, route }) => {
 
       const quantidadeFaltante = 6 - (confirmados.length + aguardando.length);
       for (let i = 0; i < quantidadeFaltante; i++) {
+        console.log("aguardando.push", aguardando);
         aguardando.push(new TfcConteinerInspecaoIMODTO());
+        console.log("Pos > aguardando.push", aguardando);
       }
-
+      
+      
       setImoConfirmadoL(confirmados);
       setImoAguardandoL(aguardando);
+      
     } catch (err) {
       console.error("ERRO", err);
       Alert.alert("Atenção", "Erro ao buscar dados da API.");
@@ -192,42 +197,51 @@ const PatioImoScreen = ({ navigation, route }) => {
         <Text style={styles.subtitle}>{inspecao.tfcContainerInspecaoDto.TRA}</Text>
         <Text style={styles.subtitle}>{inspecao.checklistSelecionado.name}</Text>
       </View>
-
+  
       <ScrollView style={styles.form}>
-        <Text style={styles.sectionTitle}>IMO's</Text>
+        <Text style={styles.sectionTitle}>IMO's Confirmados</Text>
         {imoConfirmadoL.map((imo, index) => (
           <View key={index} style={styles.item}>
-            <Text style={styles.label}>IMO</Text>
-            <TextInput style={styles.input} value={imo.NROIMO} editable={!imo.isReadOnly} keyboardType="numeric" />
-            <Text style={styles.label}>UN</Text>
-            <TextInput style={styles.input} value={imo.UN} editable={!imo.isReadOnly} keyboardType="numeric" />
-            <Text style={styles.label}>SELOS</Text>
-            <TextInput style={styles.input} value={imo.SELO} keyboardType="numeric" />
-            <Text style={styles.label}>Selo de IMO</Text>
-            <TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              value={imo.NROIMO}
+              editable={!imo.isReadOnly}
+              placeholder="IMO"
+              keyboardType="numeric"
+            />
+  
+            <TextInput
+              style={styles.input}
+              value={imo.UN}
+              editable={!imo.isReadOnly}
+              placeholder="UN"
+              keyboardType="numeric"
+            />
+  
+            <TextInput
+              style={styles.input}
+              value={imo.SELO}
+              placeholder="SELOS"
+              keyboardType="numeric"
+            />
+  
+            <TouchableOpacity style={styles.toggleButton}>
               <Icon name={imo.ISSELOIMO ? "toggle-on" : "toggle-off"} size={24} color="#333" />
             </TouchableOpacity>
-            {imo.imagemL && imo.imagemL.map((imagem, i) => (
-              <View key={i} style={styles.imageWrapper}>
-                <TouchableOpacity onPress={() => showModal(i, imagem.url || imagem.CAMINHO)}>
-                  <Image source={{ uri: imagem.url || imagem.CAMINHO }} style={styles.image} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => removerImagemImo(imo, imagem)}>
-                  <Icon name="close" size={24} color="red" />
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.button} onPress={() => goToCamera(imo)}>
-              <Text style={styles.buttonText}>Fotos</Text>
+  
+            <TouchableOpacity style={styles.photoButton} onPress={() => goToCamera(imo)}>
               <Icon name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
+  
+            <TouchableOpacity style={styles.confirmButton} onPress={() => adicionarImo(imo)}>
+              <Icon name="check-circle" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         ))}
-
+  
         <Text style={styles.sectionTitle}>Aguardando Confirmação</Text>
         {imoAguardandoL.map((imo, index) => (
           <View key={index} style={styles.item}>
-            <Text style={styles.label}>IMO</Text>
             <TextInput
               style={styles.input}
               value={imo.NROIMO}
@@ -237,9 +251,10 @@ const PatioImoScreen = ({ navigation, route }) => {
                 updatedImos[index].NROIMO = text;
                 setImoAguardandoL(updatedImos);
               }}
+              placeholder="IMO"
               keyboardType="numeric"
             />
-            <Text style={styles.label}>UN</Text>
+  
             <TextInput
               style={styles.input}
               value={imo.UN}
@@ -249,9 +264,10 @@ const PatioImoScreen = ({ navigation, route }) => {
                 updatedImos[index].UN = text;
                 setImoAguardandoL(updatedImos);
               }}
+              placeholder="UN"
               keyboardType="numeric"
             />
-            <Text style={styles.label}>SELOS</Text>
+  
             <TextInput
               style={styles.input}
               value={imo.SELO}
@@ -260,37 +276,25 @@ const PatioImoScreen = ({ navigation, route }) => {
                 updatedImos[index].SELO = text;
                 setImoAguardandoL(updatedImos);
               }}
+              placeholder="SELOS"
               keyboardType="numeric"
             />
-            <Text style={styles.label}>Selo de IMO</Text>
-            <TouchableOpacity>
+  
+            <TouchableOpacity style={styles.toggleButton}>
               <Icon name={imo.ISSELOIMO ? "toggle-on" : "toggle-off"} size={24} color="#333" />
             </TouchableOpacity>
-            {imo.imagemL && imo.imagemL.map((imagem, i) => (
-              <View key={i} style={styles.imageWrapper}>
-                <TouchableOpacity onPress={() => showModal(i, imagem.url || imagem.CAMINHO)}>
-                  <Image source={{ uri: imagem.url || imagem.CAMINHO }} style={styles.image} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => removerImagemImo(imo, imagem)}>
-                  <Icon name="close" size={24} color="red" />
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.button} onPress={() => goToCamera(imo)}>
-              <Text style={styles.buttonText}>Fotos</Text>
+  
+            <TouchableOpacity style={styles.photoButton} onPress={() => goToCamera(imo)}>
               <Icon name="camera" size={24} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => adicionarImo(imo)}>
-              <Icon name="check-circle" size={24} color="orange" />
+  
+            <TouchableOpacity style={styles.confirmButton} onPress={() => adicionarImo(imo)}>
+              <Icon name="check-circle" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         ))}
-
-        <TouchableOpacity style={styles.finalizarButton} onPress={handleFinalizarImo}>
-          <Text style={styles.finalizarButtonText}>Confirmar</Text>
-        </TouchableOpacity>
       </ScrollView>
-
+  
       {cameraVisible && (
         <Modal animationType="slide" transparent={true} visible={cameraVisible}>
           <View style={styles.cameraContainer}>
@@ -309,7 +313,7 @@ const PatioImoScreen = ({ navigation, route }) => {
           </View>
         </Modal>
       )}
-
+  
       {currentImageUrl && (
         <Modal animationType="slide" transparent={true} visible={!!currentImageUrl}>
           <View style={styles.modalOverlay}>
@@ -324,8 +328,124 @@ const PatioImoScreen = ({ navigation, route }) => {
       )}
     </KeyboardAvoidingView>
   );
+  
+  
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#022E69',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  form: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    justifyContent: 'space-between',
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+    marginRight: 8,
+  },
+  toggleButton: {
+    padding: 10,
+  },
+  photoButton: {
+    backgroundColor: '#D0021B',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButton: {
+    backgroundColor: '#008000',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  captureButton: {
+    position: 'absolute',
+    bottom: 30,
+    left: '50%',
+    transform: [{ translateX: -50 }],
+    backgroundColor: '#022E69',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  captureButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: '#022E69',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  modalCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalImage: {
+    width: '100%',
+    height: 400,
+    resizeMode: 'contain',
+    marginBottom: 16,
+  },
+});
+
+
+/*
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -451,5 +571,5 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
-
+*/
 export default PatioImoScreen;

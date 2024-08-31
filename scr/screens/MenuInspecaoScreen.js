@@ -11,18 +11,29 @@ import {buscar} from '../services/imo-service';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const MenuInspecaoScreen = () => {
-  const [inspecao, setInspecao] = useState({});
   const route = useRoute();
+  const [inspecao, setInspecao] = useState(route.params?.inspecao || {});
+ 
   const navigation = useNavigation();
   const { presentLoading, dismissLoading, presentToast } = BaseModel();
   const { present, presentErr } = AlertService();
   const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    console.log("route.params?.inspecao", route.params?.inspecao);
+    if (route.params?.inspecao) {
+      setInspecao(route.params.inspecao);
+    }
+  }, [route.params?.inspecao]);
 
   useEffect(() => {
+   
+    console.log("NenuInspecao > ", route.params)
     const params = route.params;    
     if (params) {
       const inspecaoData = params;      
       setInspecao(inspecaoData);      
+      console.log("NenuInspecao", inspecao)
     }
 
     const handleKeyPress = (e) => {
@@ -148,7 +159,12 @@ const MenuInspecaoScreen = () => {
         data={inspecao.checklist?.menuL || []}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.itemContainer} onPress={() => goTo(item)}>
-            <Text style={styles.itemText}>{item.name}</Text>
+            <View style={styles.itemContent}>
+              <Text style={[styles.itemText, item.isDadosPreenchidos && styles.itemTextPreenchido]}>
+                {item.name}
+              </Text>
+              {item.isDadosPreenchidos && <Icon name="check-circle" size={20} color="green" style={styles.icon} />}
+            </View>
           </TouchableOpacity>
         )}
         keyExtractor={(item, index) => index.toString()}
@@ -172,8 +188,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
+  itemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   itemText: {
     fontSize: 16,
+  },
+  itemTextPreenchido: {
+    color: 'green', // Cor verde para o item de menu preenchido
+  },
+  icon: {
+    marginLeft: 10,
   },
   finalizeButton: {
     backgroundColor: '#022E69',
