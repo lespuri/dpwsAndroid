@@ -2,6 +2,10 @@ import { apiLogin } from './apiRequest-services';
 import {mockConteinerServicePesquisar, mockConteinerServiceEditar } from '../utils/mocados'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+export const logout = async () => {    
+    await AsyncStorage.setItem('userToken', '');
+}
 export const login = async (username, password) => {    
     console.log("login-service");
     

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {login} from '../services/login-service';
+import { login } from '../services/login-service';
+import { useFocusEffect } from '@react-navigation/native';
 
 const bannerImage = require('../assets/images/LogoDPW.png');
 
@@ -10,12 +11,27 @@ const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkToken = async () => {
+        const token = await AsyncStorage.getItem("userToken");
+        console.log("token", token);
+        if (token) {
+          navigation.navigate('Menu');
+        }
+      };
+      
+      checkToken();
+    }, [navigation])
+  );
+
   const handleLogin = async () => {
     try {
       console.log("Iniciando o login...");
       const response = await login(username, password);  // Chamada à função de login
-  
+
       if (response && response.data.access_token) {  // Verifique se o login foi bem-sucedido e o token foi retornado
+        await AsyncStorage.setItem("userToken", response.data.access_token);  // Salvar o token no AsyncStorage
         navigation.navigate('Menu');
       } else {
         Alert.alert("Erro", "Login falhou. Verifique suas credenciais.");

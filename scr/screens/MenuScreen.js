@@ -6,31 +6,17 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { KDTipo } from '../enum/KDTipo';
-import { INSPECAO_CHECKLIST } from '../utils/constants.page';  // Importar a constante
+import { INSPECAO_CHECKLIST } from '../utils/constants.page';
+import {logout} from '../services/login-service';
+
 const handleMenuPress = (title, navigation) => {
-  if (title === 'Inspeção de Gate' ) {
+  if (title === 'Inspeção de Gate') {
     const inspecaoData = {
-      tipo: KDTipo.kdInspecaoGate            
-    };
-            
-    const checklist = INSPECAO_CHECKLIST["kdInspecaoGate"];  // Certifique-se de que TIPO corresponde a uma chave em INSPECAO_CHECKLIST
-    
-    if (checklist) {
-      inspecaoData.checklist = checklist;
-      inspecaoData.checklist.menuL.forEach((eachObj) => {
-        eachObj.isDadosPreenchidos = false;
-      });
-    }
-
-    
-    navigation.navigate('PesquisarContainer', inspecaoData);
-  }else if (title === 'Inspeção de Patio') {
-    const inspecaoData = {
-      tipo: KDTipo.kdInspecaoPatio ,           
+      tipo: KDTipo.kdInspecaoGate
     };
 
-    const checklist = INSPECAO_CHECKLIST["kdInspecaoPatio"];  // Certifique-se de que TIPO corresponde a uma chave em INSPECAO_CHECKLIST
-    
+    const checklist = INSPECAO_CHECKLIST["kdInspecaoGate"];
+
     if (checklist) {
       inspecaoData.checklist = checklist;
       inspecaoData.checklist.menuL.forEach((eachObj) => {
@@ -39,76 +25,69 @@ const handleMenuPress = (title, navigation) => {
     }
 
     navigation.navigate('PesquisarContainer', inspecaoData);
-  
+  } else if (title === 'Inspeção de Patio') {
+    const inspecaoData = {
+      tipo: KDTipo.kdInspecaoPatio
+    };
+
+    const checklist = INSPECAO_CHECKLIST["kdInspecaoPatio"];
+
+    if (checklist) {
+      inspecaoData.checklist = checklist;
+      inspecaoData.checklist.menuL.forEach((eachObj) => {
+        eachObj.isDadosPreenchidos = false;
+      });
+    }
+
+    navigation.navigate('PesquisarContainer', inspecaoData);
   } else {
     Alert.alert('Menu Pressionado', title);
   }
 };
 
+const handleLogout = (navigation) => {
+  navigation.navigate("Login") 
+  logout();
+  
+};
 
 const fetchData = async (setMenuItems) => {
   try {
-    /*
-    const response = await axios.get('https://api.dpworldsantos.com/TsaMenu/Get');
-    const data = response.data.map(item => ({
-      id: item.id.toString(),
-      title: item.title,
-      icon: item.icon,
-    }));
-    */
     const token = await AsyncStorage.getItem('userToken');
-        
+
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      //url: 'https://api.dpworldsantos.com/TsaMenu/Get',
       url: 'http://187.60.22.181:8100/TsaMenu/Get',
-      //url: 'http://qa.embraportonline.com.br:8100/TsaMenu/Get',
-      headers: { 
+      headers: {
         'Authorization': 'Bearer ' + token
       }
     };
 
     axios.request(config)
-    .then((response) => {      
-      setMenuItems(response.data
-      .filter(item => item.NOME === "Inspeção de Gate" || item.NOME === "Inspeção de Patio")
-      .map(item => ({
-        id: item.TSARECURSOID.toString(),
-        title: item.NOME,
-        icon: 'microchip' // Ajuste o ícone conforme necessário
-      })));
-
-    })
-    .catch((error) => {
-      console.log("menu",error);
-    });
-
-    /*
-    setMenuItems( 
-
-      [
-        { id: '1', title: 'Conferência Física', icon: 'list-alt' },
-        { id: '2', title: 'Menu Customizado ', icon: 'cog' },
-        { id: '3', title: 'Menu Customizado ', icon: 'cog' },
-        { id: '4', title: 'Menu Customizado ', icon: 'cog' },
-        { id: '5', title: 'Menu Customizado ', icon: 'cog' },
-        { id: '6', title: 'Menu Customizado ', icon: 'cog' },
-      ]
-    );*/
+      .then((response) => {
+        setMenuItems(response.data
+          .filter(item => item.NOME === "Inspeção de Gate" || item.NOME === "Inspeção de Patio")
+          .map(item => ({
+            id: item.TSARECURSOID.toString(),
+            title: item.NOME,
+            icon: 'microchip'
+          })));
+      })
+      .catch((error) => {
+        console.log("menu", error);
+      });
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
   }
 };
 
 const renderItem = ({ item, navigation }) => (
-  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title, navigation)} >
+  <TouchableOpacity style={styles.itemContainer} onPress={() => handleMenuPress(item.title, navigation)}>
     <Icon name={item.icon || 'default-icon'} size={40} color="#000" style={styles.icon} />
-    <Text style={styles.title}>{item.title}</Text>    
+    <Text style={styles.title}>{item.title}</Text>
   </TouchableOpacity>
 );
-
-
 
 const MenuScreen = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -117,6 +96,7 @@ const MenuScreen = () => {
   useEffect(() => {
     fetchData(setMenuItems);
   }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -126,6 +106,9 @@ const MenuScreen = () => {
         numColumns={2}
         contentContainerStyle={styles.listContainer}
       />
+      <TouchableOpacity style={styles.logoutButton} onPress={() => handleLogout(navigation) }>
+        <Text style={styles.logoutButtonText}>Sair do Sistema</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -161,10 +144,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  settingsIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
+  logoutButton: {
+    backgroundColor: '#022E69',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    marginRight: 8,
   },
 });
 
