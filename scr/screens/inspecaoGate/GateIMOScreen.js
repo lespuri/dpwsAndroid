@@ -10,16 +10,15 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator, // Importado para mostrar o indicador de carregamento
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import SelectDropdown from 'react-native-select-dropdown';
-import { Camera, useCameraDevices, CameraPermissionStatus  } from 'react-native-vision-camera';
-import PageGateHeader from './GateHeaderScreen';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { salvar, buscar, buscarImagem, uploadImagem } from '../../services/imo-service';
 import TfcConteinerInspecaoIMODTO from '../../models/TfcConteinerInspecaoIMODTO';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
-import {  launchCamera  } from 'react-native-image-picker';
+import { launchCamera } from 'react-native-image-picker';
 
 const GateImoScreen = ({ navigation, route }) => {
   const [inspecao, setInspecao] = useState(route.params.inspecao);
@@ -33,15 +32,11 @@ const GateImoScreen = ({ navigation, route }) => {
   const devices = useCameraDevices();
   const device = devices.back || devices.find(dev => dev.position === 'back');
   const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [loadingImo, setLoadingImo] = useState(true); // Estado de carregamento para a lista de IMOs
 
-  useEffect(() => {
-    
+  useEffect(() => {    
     buscarDadosApi();
     requestCameraPermission();
-    
-    return () => {
-      // Cleanup if necessary
-    };
   }, []);
   
   useEffect(() => {
@@ -50,9 +45,9 @@ const GateImoScreen = ({ navigation, route }) => {
       setShouldNavigate(false);
     }
   }, [inspecao]);
+
   const requestCameraPermission = async () => {
     const permission = await Camera.getCameraPermissionStatus();
-    console.log(permission);
     if (permission !== 'granted') {
       const request = await Camera.requestCameraPermission();
       if (request !== 'granted') {
@@ -62,61 +57,31 @@ const GateImoScreen = ({ navigation, route }) => {
   };
 
   const buscarDadosApi = async () => {
-    const result = await buscar(inspecao.tfcContainerInspecaoDto);    
-    setImoConfirmadoL([]);
-    result.forEach(async (value) => {
+    try {
+      setLoadingImo(true); // Inicia o carregamento
+      const result = await buscar(inspecao.tfcContainerInspecaoDto);    
+      setImoConfirmadoL([]);
+      for (const value of result) {
         const resultIm = await buscarImagem(value.TFCCONTEINERINSPECAOIMOID);
-        console.log("resultIm", resultIm);
-      setImoConfirmadoL(prevState => [
-        ...prevState,
-        { UN: value.UN, IMO: value.NROIMO, TFCCONTEINERINSPECAOIMOID: value.TFCCONTEINERINSPECAOIMOID, imagemL: resultIm }
-      ]);
-      
-    });
-
-    
+        setImoConfirmadoL(prevState => [
+          ...prevState,
+          { UN: value.UN, IMO: value.NROIMO, TFCCONTEINERINSPECAOIMOID: value.TFCCONTEINERINSPECAOIMOID, imagemL: resultIm }
+        ]);
+      }
+    } catch (err) {
+      console.log("ERRO", err);
+      Alert.alert("Atenção", "Erro ao buscar dados da API.");
+    } finally {
+      setLoadingImo(false); // Termina o carregamento
+    }
   };
 
-  const buscarDadosApiOld = async () => {
-    
-    const result = await buscar(inspecao.tfcContainerInspecaoDto);
-    console.log("buscarDadosApi", result);
-    result.forEach(async (value) => {
-        
-        setImoConfirmadoL([...imoConfirmadoL, { UN: value.UN, IMO: value.NROIMO, TFCCONTEINERINSPECAOIMOID: value.TFCCONTEINERINSPECAOIMOID , imagemL: imageNovaL }]);
-        //const resultIm = await buscarImagem(value);
-        //setImageNovaL([...imageNovaL, { uri: `file://{photo.path}` }]);        
-        //console.log("result.forEach", imageNovaL);
-    });
-    
-    
-  };
-
-  const buscarImagensApi = async(imo) => {
-    console.log(" buscando imagens api ...");
-
-    this.imoService.buscarImagem(imo).then((result) => {
-        console.log("this.buscarImagensApi finalizado", result);
-
-        imo.imagemL = result;
-    }, (err) => {
-        this.loading.dismiss();
-
-        console.log(" ERRO", err);
-
-        this.alert.present("Atenção", this.extractErrorMessage(err), []);
-    });
-}
-
-const onAdd = async () => {
+  const onAdd = async () => {
     const isIMOImagem = imageNovaL != null && imageNovaL.length > 0;
-    console.log("onAdd");
     if (!modelUn) {
       Alert.alert("Atenção", "Selecione o IMO para adicionar");
     } else {
       try {
-        // Mostra o loading
-        
         inspecao.tfcConteinerInspecaoIMODTO = new TfcConteinerInspecaoIMODTO();
         inspecao.tfcConteinerInspecaoIMODTO.TIPOOPERACAO = inspecao.tfcContainerInspecaoDto.TIPO;
         inspecao.tfcConteinerInspecaoIMODTO.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
@@ -125,118 +90,83 @@ const onAdd = async () => {
         inspecao.tfcConteinerInspecaoIMODTO.NROIMO = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
         inspecao.tfcConteinerInspecaoIMODTO.imagemL = imageNovaL;
   
-        
         const result = await salvar(inspecao.tfcConteinerInspecaoIMODTO);
-        
         await buscarDadosApi();
-        // Upload de arquivos
-        await uploadImagem(inspecao.tfcContainerInspecaoDto, inspecao.tfcConteinerInspecaoIMODTO, imageNovaL[0]);
-  //(container, imo, imagem)
+        if (inspecao.tfcConteinerInspecaoIMODTO.imagemL.length > 0 )
+          await uploadImagem(inspecao.tfcContainerInspecaoDto, inspecao.tfcConteinerInspecaoIMODTO, imageNovaL[0]);
+
         setModelUn('');
         setImageNovaL([]);
-        
       } catch (err) {
         console.log("ERRO", err);
         Alert.alert("Atenção", err.toString());
-      } finally {
-        //dismissLoading();
       }
     }
   };
   
   const onRemove = async (imo) => {
     try {
-      // Preparar os dados para exclusão      
-
       inspecao.tfcConteinerInspecaoIMODTO = new TfcConteinerInspecaoIMODTO();
       inspecao.tfcConteinerInspecaoIMODTO.TIPOOPERACAO = inspecao.tfcContainerInspecaoDto.TIPO;
       inspecao.tfcConteinerInspecaoIMODTO.TFCCONTEINERINSPECAOID = inspecao.tfcContainerInspecaoDto.TFCCONTEINERINSPECAOID;
       inspecao.tfcConteinerInspecaoIMODTO.NextAction = "Excluir";
       inspecao.tfcConteinerInspecaoIMODTO.TFCCONTEINERINSPECAOIMOID = imo.TFCCONTEINERINSPECAOIMOID;
-    console.log("onRemove");    
-      // Chama o serviço para salvar (excluir)
+
       await salvar(inspecao.tfcConteinerInspecaoIMODTO);
-  
-      // Atualiza os dados após exclusão
       await buscarDadosApi();
     } catch (err) {
       console.log("ERRO", err);
-      Alert.alert("Atenção", extractErrorMessage(err));
-    }
-  };
-  const adicionarImo = () => {
-    if (modelUn) {
-      setImoConfirmadoL([...imoConfirmadoL, { UN: modelUn, imagemL: imageNovaL }]);
-      setModelUn('');
-      setImageNovaL([]);
+      Alert.alert("Atenção", "Erro ao excluir o IMO.");
     }
   };
 
-  const removeImage = (index) => {
-    //console.log("removeImage", imo);
-    //setImoConfirmadoL(imoConfirmadoL.filter(item => item !== imo));
-    setImageNovaL(prevImages => prevImages.filter((_, i) => i !== index));
-  };
+  const captureImageWithCamera = () => {
+    const options = {
+      mediaType: 'photo',
+      saveToPhotos: true,
+    };
 
-// Função para capturar imagem da câmera
-const captureImageWithCamera = () => {
-  const options = {
-    mediaType: 'photo',
-    saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
-  };
-
-  launchCamera(options, (response) => {
-    if (response.didCancel) {
-      console.log('User cancelled camera');
-    } else if (response.error) {
-      console.log('Camera Error: ', response.error);
-    } else {
-      const source = { uri: response.assets[0].uri };
-      //setPhoto(source);
-      setImageNovaL([...imageNovaL, { uri: source.uri }]);
-            
-    }
-  });
-};
-
-  const goToCamera = async () => {
-    setCameraVisible(true);
+    launchCamera(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled camera');
+      } else if (response.error) {
+        console.log('Camera Error: ', response.error);
+      } else {
+        const source = { uri: response.assets[0].uri };
+        setImageNovaL([...imageNovaL, { uri: source.uri }]);
+      }
+    });
   };
 
   const capturePhoto = async () => {
     if (cameraRef.current) {
-        const photo = await cameraRef.current.takePhoto({
-          flash: 'auto',
-          qualityPrioritization: 'balanced',
-        });
-    
-        // Obtenha o caminho do arquivo
-        const fileUri = `file://${photo.path}`;
-    
-        // Verifique o tamanho da imagem
-        const fileStat = await RNFS.stat(fileUri);
-    
-        const MAX_SIZE_MB = 3;
-        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-    
-        if (fileStat.size > MAX_SIZE_BYTES) {
-          // Redimensione a imagem para uma resolução menor
-          const resizedImage = await ImageResizer.createResizedImage(
-            fileUri,
-            800, // nova largura
-            600, // nova altura
-            'JPEG', // formato
-            80 // qualidade
-          );
-    
-          // Substitua o caminho original pela imagem redimensionada
-          setImageNovaL([...imageNovaL, { uri: resizedImage.uri }]);
-        } else {
-          setImageNovaL([...imageNovaL, { uri: fileUri }]);
-        }
-    
-        setCameraVisible(false);
+      const photo = await cameraRef.current.takePhoto({
+        flash: 'auto',
+        qualityPrioritization: 'balanced',
+      });
+
+      const fileUri = `file://${photo.path}`;
+      const fileStat = await RNFS.stat(fileUri);
+
+      const MAX_SIZE_MB = 3;
+      const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+      if (fileStat.size > MAX_SIZE_BYTES) {
+        const resizedImage = await ImageResizer.createResizedImage(
+          fileUri,
+          800,
+          600,
+          'JPEG',
+          80
+        );
+
+        setImageNovaL([...imageNovaL, { uri: resizedImage.uri }]);
+      } else {
+        setImageNovaL([...imageNovaL, { uri: fileUri }]);
       }
+
+      setCameraVisible(false);
+    }
   };
 
   const showModal = (url) => {
@@ -246,13 +176,11 @@ const captureImageWithCamera = () => {
 
   const confirmarImo = async () => {
     try {
-      const dto = imoConfirmadoL; // new TfcConteinerInspecaoIMODTO();
+      const dto = imoConfirmadoL;
       
-      await salvar(dto);
-
       const updatedMenuL = inspecao.checklist.menuL.map(item => {
         if (item.page.includes("GateIMO")) {
-          return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
+          return { ...item, isDadosPreenchidos: true };
         }
         return item;
       });
@@ -320,7 +248,7 @@ const captureImageWithCamera = () => {
           </View>
         }
         renderItem={({ item }) => (
-            <View style={styles.item}>
+          <View style={styles.item}>
             <Text style={styles.label}>UN: {item.UN}</Text>
             <Text style={styles.label}>IMO: {item.IMO}</Text>
             <Icon name="close" size={24} color="red" onPress={() => onRemove(item)} />
@@ -334,9 +262,17 @@ const captureImageWithCamera = () => {
               </View>
             )}
           </View>
-
-
         )}
+        ListEmptyComponent={
+          loadingImo ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text>Carregando IMO...</Text>
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>Nenhum IMO confirmado.</Text>
+          )
+        }
         ListFooterComponent={
           <View style={styles.footer}>
             <TouchableOpacity style={styles.finalizarButton} onPress={confirmarImo}>
@@ -428,6 +364,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 15,
     padding: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#666',
   },
 });
 

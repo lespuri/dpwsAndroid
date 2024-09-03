@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
   Switch,
+  ActivityIndicator
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from 'react-native-select-dropdown';
@@ -46,6 +47,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   const devices = useCameraDevices();
   const device = devices.back || devices.find(dev => dev.position === 'back');
   const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [loadingAvarias, setLoadingAvarias] = useState(true); // Estado de carregamento para a lista de avarias
 
   useEffect(() => {
     presentLoading();
@@ -72,6 +74,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
 
   const buscarDadosApi = async () => {
     try {
+      setLoadingAvarias(true); // Inicia o carregamento
       const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
       //inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
       console.log("buscarDadosApi", result);
@@ -88,6 +91,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
       // Handle error
       console.log("ERRO", err);
       Alert.alert("Atenção", "Erro ao buscar dados da API");
+      
     }
   };
 
@@ -149,6 +153,8 @@ const GateAvariasScreen = ({ navigation, route }) => {
       // Handle error
       console.log("ERRO", err);
       Alert.alert("Atenção", "Erro ao buscar dados completos da API");
+    }finally{
+      setLoadingAvarias(false); // Termina o carregamento
     }
   };
 
@@ -498,6 +504,15 @@ setInspecao(prevInspecao => ({
             )}
           </View>
         )}
+        ListEmptyComponent={
+          loadingAvarias ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text>Carregando Avarias...</Text>
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>Nenhuma avaria encontrada.</Text>
+          )}        
         ListFooterComponent={
           <View style={styles.footer}>
             <TouchableOpacity style={styles.finalizarButton} onPress={() => finalizarAvaria(true)}>
@@ -748,6 +763,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
   },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#555',
+    marginTop: 20,
+  }
 });
 
 export default GateAvariasScreen;

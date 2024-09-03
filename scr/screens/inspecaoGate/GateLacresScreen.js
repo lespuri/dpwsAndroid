@@ -40,8 +40,8 @@ const GateLacresScreen = ({ navigation }) => {
   const device = devices.back || devices.find(dev => dev.position === 'back');
 
   useEffect(() => {
-    setLacrePrevistoConfirmadoL(inspecao.lacrePrevistoConfirmadoL || []);
-    setOutrosLacresL(inspecao.outrosLacresL || []);
+    setLacrePrevistoConfirmadoL( []);
+    setOutrosLacresL([]);
     buscarDadosApi();
     requestCameraPermission();
   }, []);
@@ -87,7 +87,12 @@ const GateLacresScreen = ({ navigation }) => {
 
       inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.COLOCADOS = lacresColocados;
 
+    console.log(inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.PREVISTOS.split(",").length);
+      if(inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOLACRERESUMODTO.PREVISTOS.split(",").length > 0)
       prepararDadosLocal();
+    else
+      buscarDadosApi();
+
     } catch (err) {
       console.error("ERRO", err);
       Alert.alert("Atenção", "Erro ao buscar dados da API.");

@@ -23,6 +23,7 @@ const getAuthToken = async () => {
 
  export const salvar = async (container) => {
   try{
+    console.log(container)
     return apiRequest('post', 'TfcConteinerInspecaoIMO/SalvarByGate', container);
   }catch(err){
     throw new Error(err);
@@ -70,13 +71,17 @@ const getAuthToken = async () => {
         },
         field: 'file',
         type: 'multipart',
+        notification: {
+          enabled: false, // Desabilita as notificações
+        }
       };
   
       Upload.startUpload(options).then(uploadId => {
         console.log('Upload started with id:', uploadId);
   
         Upload.addListener('error', uploadId, (data) => {
-          console.log(`Error: ${data.error}`)
+          console.log("Error data");
+          console.log(data)
         });
   
       }).catch(err => {

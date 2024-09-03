@@ -50,7 +50,8 @@ export const uploadImagem = async (container, lacre, imagem) => {
     // Copiando o arquivo de content:// para um local temporário
     const tempPath = `${RNFS.TemporaryDirectoryPath}/${Date.now()}.jpeg`;
     await RNFS.copyFile(imagem.uri, tempPath);
-
+    
+    
     const options = {
       url: `http://187.60.22.181:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
       //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
