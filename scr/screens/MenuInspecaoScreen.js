@@ -24,16 +24,17 @@ const MenuInspecaoScreen = () => {
     if (route.params?.inspecao) {
       setInspecao(route.params.inspecao);
     }
+    console.log(inspecao.tfcContainerInspecaoDto);
   }, [route.params?.inspecao]);
 
   useEffect(() => {
-   
-    console.log("NenuInspecao > ", route.params)
+   console.log("route.params Menu Inspecao", route.params)
+    
     const params = route.params;    
     if (params) {
       const inspecaoData = params;      
       setInspecao(inspecaoData);      
-      console.log("NenuInspecao", inspecao)
+      console.log("NenuInspecao", inspecao.tfcContainerInspecaoDto)
     }
 
     const handleKeyPress = (e) => {
@@ -120,12 +121,15 @@ const MenuInspecaoScreen = () => {
 
   const onFinalizar = async () => {
     setLoading(true);
+    
     inspecao.tfcContainerInspecaoDto.TIPO = inspecao.tipo;
     inspecao.tfcContainerInspecaoDto.TIPOENUM = KDTipo[inspecao.tipo];
     
     
     try {
       console.log("finalizar");
+      console.log(inspecao.tfcContainerInspecaoDto);
+      console.log(inspecao.tfcContainerInspecaoDto);
       const result = await finalizar(inspecao.tfcContainerInspecaoDto, inspecao.reservaSelecionada?.RESERVAJANELAID || 0);
       
       //dismissLoading();

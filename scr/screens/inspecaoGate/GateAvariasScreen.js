@@ -74,7 +74,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
     try {
       const result = await buscarLacre(inspecao.tfcContainerInspecaoDto);
       //inspecao.tfcConteinerFinalizarInspecaoDTO = TfcConteinerFinalizarInspecaoDTO.fromJSON(result);
-      
+      console.log("buscarDadosApi", result);
       inspecao.tfcConteinerFinalizarInspecaoDTO = { ...new TfcConteinerFinalizarInspecaoDTO(), ...result };
       
       if (!inspecao.tfcConteinerFinalizarInspecaoDTO.TFCCONTEINERINSPECAOAVARIARESUMODTO) {
@@ -155,6 +155,7 @@ const GateAvariasScreen = ({ navigation, route }) => {
   const buscarImagensApi = async (avaria) => {
     try {
       const result = await buscarImagem(avaria);
+      console.log("buscarImagensApi", result)
       avaria.imagemL = result;
     } catch (err) {
       // Handle error
@@ -358,7 +359,7 @@ setInspecao(prevInspecao => ({
       ...prevInspecao,
       checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
     }));
-    console.log("updatedMenuL > inspecao", inspecao);
+    //console.log("updatedMenuL > inspecao", inspecao);
     
     //navigation.replace('MenuInspecao', { inspecao });
   };

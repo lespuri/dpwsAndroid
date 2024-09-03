@@ -19,7 +19,7 @@ const PesquisarContainerScreen = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setModelContainer('FFAU2204840');
+    setModelContainer('CXRU1490700');
     
   });
 
@@ -103,11 +103,12 @@ const PesquisarContainerScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Pesquisar Container</Text>
       <TextInput
-        style={styles.searchbar}
-        placeholder="Search"
-        value={modelContainer}
-        onChangeText={setModelContainer}
-      />
+  style={styles.searchbar}
+  placeholder="Search"
+  value={modelContainer}
+  onChangeText={(text) => setModelContainer(text.toUpperCase())}
+  autoCapitalize="characters"
+/>
       <TouchableOpacity style={styles.button} onPress={handlePesquisar}>
         <Text style={styles.buttonText}>Pesquisar</Text>
         {loading ? <ActivityIndicator color="#fff" /> : <Icon name="search" size={20} color="#fff" />}

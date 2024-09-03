@@ -33,9 +33,10 @@ const GateDadosScreen = () => {
     } else {
       setLongarinaSelecionado(longarinaOptions[0]);
     }
-    console.log("shouldNavigate");
-    console.log("shouldNavigate > valor", shouldNavigate);
+    //console.log("shouldNavigate");
+    //console.log("shouldNavigate > valor", shouldNavigate);
     if (shouldNavigate) {
+      console.log("Gate Dados Navigate", inspecao.tfcContainerInspecaoDto);
       navigation.replace('MenuInspecao', inspecao);
       setShouldNavigate(false); // Reseta o estado para evitar navegações repetidas
     }
@@ -64,15 +65,16 @@ const GateDadosScreen = () => {
       });
   
       setShouldNavigate(true);
+      console.log("Gate Dados", result)
       setInspecao(prevInspecao => ({
         ...prevInspecao,
         checklist: { 
           ...prevInspecao.checklist, 
           menuL: updatedMenuL 
         },
-        tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
+        //tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
       }));      
-      //console.log(inspecao);
+      
       
       //navigation.navigate('MenuInspecao', inspecao);
       
