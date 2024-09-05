@@ -19,7 +19,7 @@ const PesquisarContainerScreen = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setModelContainer('STBU8132528');
+    setModelContainer('TGBU8721225');
     
   });
 
@@ -52,7 +52,7 @@ const PesquisarContainerScreen = () => {
             eachObj.isDadosPreenchidos = false;
           });
           
-          setInspecao(updatedInspecao);
+          //setInspecao(updatedInspecao);
           
           //Alert.alert('Success', 'Container encontrado!');
           navigation.navigate('MenuInspecao', updatedInspecao);

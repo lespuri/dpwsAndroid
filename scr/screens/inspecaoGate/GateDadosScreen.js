@@ -56,7 +56,7 @@ const GateDadosScreen = () => {
       }
       
       const result = await editar(inspecao.tfcContainerInspecaoDto);
-      
+      console.log("result", result);
       const updatedMenuL = inspecao.checklist.menuL.map(item => {
         if (item.page.includes("GateDados")) {
           return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
@@ -65,14 +65,14 @@ const GateDadosScreen = () => {
       });
   
       setShouldNavigate(true);
-      console.log("Gate Dados", result)
+      
       setInspecao(prevInspecao => ({
         ...prevInspecao,
         checklist: { 
           ...prevInspecao.checklist, 
           menuL: updatedMenuL 
         },
-        //tfcContainerInspecaoDto: Object.assign(new TfcConteinerInspecaoDTO(), result)
+        tfcContainerInspecaoDto:  result
       }));      
       
       

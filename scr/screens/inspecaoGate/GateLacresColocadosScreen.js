@@ -9,10 +9,11 @@ import {
   View,
   ScrollView,
   Switch,
+  Image
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PageGateHeader from './GateHeaderScreen';
-import { buscarLacreColocado, salvarLacreColocado } from '../../services/lacre-colocado-service';
+import { buscarLacreColocado, salvarLacreColocado, uploadImagem } from '../../services/lacre-colocado-service';
 import { TfcConteinerInspecaoLacreResumoDTO } from '../../models/TfcConteinerInspecaoLacreResumoDTO';
 import {  launchCamera  } from 'react-native-image-picker';
 
@@ -57,20 +58,36 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
   
 
   const prepararDadosLocal = () => {
-    console.log("prepararDadosLocal")
+    
     let lacres = inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS.split(",");
-    lacres = lacres.filter(element => element !== "");
-    let outrosLacresQtd = 5 - lacres.length;
+    lacres = lacres.filter(element => element !== "");        
+
+    let lista = [];
+    
+    lacres.forEach(element => {
+      lista.push({
+          lacre: element,
+          imagem: {}
+      });      
+     });
+  
+    //setColocadosLacresL(lista);
+
+    let outrosLacresQtd = 3 - lacres.length;
     for (let i = 0; i < outrosLacresQtd; i++) {
-      lacres.push("");
-    }
-    console.log("setColocadosLacresL", lacres);
-    setColocadosLacresL(lacres);
+      lista.push({
+        lacre: "",
+        imagem: {}
+    });  
+    }    
+    
+    setColocadosLacresL(lista);
+    console.log("prepararDadosLocal", lista);
     //dismissLoading();
   };
 
   const adicionarOutroLacre = () => {
-    setColocadosLacresL([...colocadosLacresL, ""]);
+    setColocadosLacresL([...colocadosLacresL, {lacre: "", imagem: {}}]);
   };
   
   const finalizarLacre = async () => {
@@ -78,7 +95,7 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
       console.log("finalizarLacre");
       let outrosLacres = colocadosLacresL.filter(element => element !== "");
       
-      inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS = outrosLacres.join(",");
+      inspecao.tfcConteinerInspecaoLacreResumoDTO.COLOCADOS = outrosLacres.map(lacre => lacre.lacre).join(",");
       inspecao.tfcConteinerInspecaoLacreResumoDTO.NextAction = "Next";
 
       console.log("finalizarLacre0");
@@ -87,8 +104,8 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
       //await presentLoading();
       const result =  await salvarLacreColocado(inspecao.tfcConteinerInspecaoLacreResumoDTO);
       console.log("Salvamento com sucesso:", result);
-  
-
+      await uploadFiles();
+/*
       const updatedMenuL = inspecao.checklist.menuL.map(item => {
         if (item.page == "GateLacresColocados") {
           return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
@@ -101,7 +118,7 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
             ...prevInspecao,
             checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
           }));        
-      
+      */
       // Navegação após o sucesso
       //navigation.navigate('MenuInspecao', { inspecao });
   
@@ -113,11 +130,51 @@ const GateLacresColocadosScreen = ({ navigation, route }) => {
     }
   };
 
+  const isLacreImagem = (lacre) => {
+    return lacre.imagem && lacre.imagem.uri;
+  };
+
+  const uploadFiles = async () => {
+    try {
+      let isOccurredError = false;      
+
+      for (const lacre of colocadosLacresL) {
+        if (isLacreImagem(lacre)) {
+          try {
+            await uploadImagem(inspecao.tfcContainerInspecaoDto, lacre.lacre, lacre.imagem);
+          } catch (err) {
+            isOccurredError = true;
+            console.log("uploadImagem ERRO", err);
+            Alert.alert("Atenção", err.message);
+            break;
+          }
+        }
+      }
+
+      if (!isOccurredError) {
+        const updatedMenuL = inspecao.checklist.menuL.map(item => {
+          if (item.page === "GateLacresColocados") {
+            return { ...item, isDadosPreenchidos: true };
+          }
+          return item;
+        });
+
+        setShouldNavigate(true);
+        setInspecao(prevInspecao => ({
+          ...prevInspecao,
+          checklist: { ...prevInspecao.checklist, menuL: updatedMenuL }
+        }));
+      }
+    } catch (err) {
+      console.log("ERRO", err);
+      Alert.alert("Atenção", err.message);
+    }
+  };  
   // Função para capturar imagem da câmera
 const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
   console.log("index", index);
   
-  setLacrePrevistoConfirmado(_lacrePrevistoColocado);
+  //setColocadosLacresL(_lacrePrevistoColocado);
   const options = {
     mediaType: 'photo',
     saveToPhotos: true, // Opcional, salva a foto no álbum do dispositivo
@@ -131,18 +188,15 @@ const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
     } else {
       const source = { uri: response.assets[0].uri };
       //setPhoto(source);
-      console.log("lacrePrevistoConfirmado", lacrePrevistoConfirmado);
-      if (_lacrePrevistoColocado
-      ){
-        const updatedLacres = [...lacrePrevistoConfirmadoL];
+      console.log("colocadosLacresL", colocadosLacresL);
+        const updatedLacres = [...colocadosLacresL];
+        console.log("colocadosLacresL > updatedLacres", updatedLacres);
         updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
-        setLacrePrevistoConfirmadoL(updatedLacres);  
-      }else{
-        const updatedLacres = [...outrosLacresL];
-        updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
-        setOutrosLacresL(updatedLacres);  
-
-      }    
+        setColocadosLacresL(updatedLacres);
+        console.log("colocadosLacresL > updatedLacres > after", updatedLacres)
+        //const updatedLacres = [...outrosLacresL];
+        //updatedLacres[index].imagem = { uri: source.uri }; // Prefixar com file://
+        //setOutrosLacresL(updatedLacres);            
     }
   });
 };
@@ -159,32 +213,67 @@ const captureImageWithCamera = (index, _lacrePrevistoColocado) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {colocadosLacresL.map((lacre, index) => (
-          <View key={index} style={styles.lacreItem}>
-            <Text style={styles.label}>LACRE COLOCADO <Text style={styles.small}>({index + 1})</Text></Text>
-            <TextInput
-              style={styles.input}
-              maxLength={15}
-              value={lacre}
-              onChangeText={text => {
-                const newLacres = [...colocadosLacresL];
-                newLacres[index] = text;
-                setColocadosLacresL(newLacres);
-              }}
-            />
-            <TouchableOpacity onPress={() => {
-              const newLacres = colocadosLacresL.filter((_, i) => i !== index);
-              setColocadosLacresL(newLacres);
-            }}>
-              <Icon name="close" size={24} color="red" />
-            </TouchableOpacity>
-          </View>
-        ))}
-        <TouchableOpacity style={styles.button} onPress={adicionarOutroLacre}>
-          <Text style={styles.buttonText}>Adicionar Lacre</Text>
-          <Icon name="plus" size={24} color="#fff" />
+      {colocadosLacresL.map((item, index) => (
+  <View key={index} style={styles.lacreItem}>
+    <Text style={styles.label}>
+      LACRE COLOCADO <Text style={styles.small}>({index + 1})</Text>
+    </Text>
+    <TextInput
+      style={styles.input}
+      maxLength={15}
+      value={item.lacre}
+      onChangeText={text => {
+        const newLacres = [...colocadosLacresL];
+        newLacres[index] = { ...newLacres[index], lacre: text }; // Mantém o objeto e só altera o 'lacre'
+        setColocadosLacresL(newLacres);
+      }}
+    />
+    {!item.imagem?.uri && (
+      <TouchableOpacity onPress={() => captureImageWithCamera(index, item)}>
+      <Icon name="camera" size={24} color="#000" />
+    </TouchableOpacity>
+
+    )}
+
+    {/* Exibir imagem se existir */}
+   
+    {item.imagem?.uri && (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        
+        <TouchableOpacity >
+          <Image source={{ uri: item.imagem?.uri }} style={styles.image} />
         </TouchableOpacity>
-      </ScrollView>
+        
+        <TouchableOpacity     
+            onPress={() => {
+              const updatedLacres = [...colocadosLacresL];
+              const index = updatedLacres.indexOf(item);
+              updatedLacres[index].imagem = null;
+              setColocadosLacresL(updatedLacres);
+            
+        }}>
+          <Icon name="close" size={24} color="red" style={styles.icon} />
+        </TouchableOpacity>
+      </View>
+    )}
+{! item.imagem?.uri && (
+    <TouchableOpacity
+    onPress={() => {
+      const newLacres = colocadosLacresL.filter((_, i) => i !== index);
+      setColocadosLacresL(newLacres);
+    }}>
+    <Icon name="close" size={24} color="red" />
+  </TouchableOpacity>
+
+)}
+  </View>
+))}
+
+  <TouchableOpacity style={styles.button} onPress={adicionarOutroLacre}>
+    <Text style={styles.buttonText}>Adicionar Lacre</Text>
+    <Icon name="plus" size={24} color="#fff" />
+  </TouchableOpacity>
+</ScrollView>
       <View style={styles.footer}>
         <TouchableOpacity style={styles.confirmButton} onPress={finalizarLacre}>
           <Text style={styles.confirmButtonText}>Confirmar</Text>
@@ -268,6 +357,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     marginRight: 8,
+  },
+  lacreItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Garante espaçamento entre os itens
+    marginBottom: 16,
+  } , 
+  image: {
+    width: 40,
+    height: 40,
+    marginLeft: 20, // Aumenta o espaçamento entre a imagem e outros ícones
+    borderRadius: 4,
   },
 });
 

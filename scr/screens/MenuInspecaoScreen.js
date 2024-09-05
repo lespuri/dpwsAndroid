@@ -19,22 +19,19 @@ const MenuInspecaoScreen = () => {
   const { present, presentErr } = AlertService();
   const [loading, setLoading] = useState(false);
   
-  useEffect(() => {
-    console.log("route.params?.inspecao", route.params?.inspecao);
+
+  useEffect(() => {    
     if (route.params?.inspecao) {
       setInspecao(route.params.inspecao);
     }
     console.log(inspecao.tfcContainerInspecaoDto);
   }, [route.params?.inspecao]);
 
-  useEffect(() => {
-   console.log("route.params Menu Inspecao", route.params)
-    
+  useEffect(() => {       
     const params = route.params;    
     if (params) {
       const inspecaoData = params;      
-      setInspecao(inspecaoData);      
-      console.log("NenuInspecao", inspecao.tfcContainerInspecaoDto)
+      setInspecao(inspecaoData);            
     }
 
     const handleKeyPress = (e) => {
