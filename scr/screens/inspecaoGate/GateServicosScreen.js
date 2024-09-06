@@ -8,6 +8,7 @@ import {
   View,
   Platform,
   FlatList,
+  ActivityIndicator
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from 'react-native-select-dropdown';
@@ -34,6 +35,7 @@ const GateServicosScreen = ({ navigation, route }) => {
     }
 
   }, [inspecao]);
+
   const presentLoading = () => {
     setLoading(true);
   };
@@ -57,7 +59,7 @@ const GateServicosScreen = ({ navigation, route }) => {
       console.log('ERRO ao buscar opções', err);
       Alert.alert('Atenção', 'Erro ao buscar opções');
     } finally {
-      dismissLoading();
+      //await dismissLoading();
     }
   };
 
@@ -85,7 +87,7 @@ const GateServicosScreen = ({ navigation, route }) => {
       console.log('ERRO ao buscar dados', err);
       Alert.alert('Atenção', 'Erro ao buscar dados');
     } finally {
-      dismissLoading();
+      await dismissLoading();
     }
   };
 
@@ -110,7 +112,7 @@ const GateServicosScreen = ({ navigation, route }) => {
         console.log('ERRO ao salvar serviço', err);
         Alert.alert('Atenção', 'Erro ao salvar serviço');
       } finally {
-        dismissLoading();
+        //await dismissLoading();
       }
     
   };
@@ -197,25 +199,37 @@ const GateServicosScreen = ({ navigation, route }) => {
             />
           </View>
         )}
-
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text>Carregando...</Text>
+        </View>
+      )}
+      {!loading && (
         <FlatList
-          data={servicoSelecionado}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.servicoItem}>
-              <Text style={styles.servicoText}>{item.EVENTODESCRICAO || item.DESCRICAO}</Text>
-              <TouchableOpacity onPress={() => removerServico(item)}>
-                <Icon name="close" size={24} color="red" />
-              </TouchableOpacity>
-            </View>
-          )}
-        />
+        data={servicoSelecionado}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.servicoItem}>
+            <Text style={styles.servicoText}>{item.EVENTODESCRICAO || item.DESCRICAO}</Text>
+            <TouchableOpacity onPress={() => removerServico(item)}>
+              <Icon name="close" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+      )}
+
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.confirmButton} onPress={finalizarServico}>
-          <Text style={styles.confirmButtonText}>Confirmar</Text>            
-        </TouchableOpacity>
+      <TouchableOpacity 
+  style={[styles.confirmButton, loading && { backgroundColor: '#ccc' }]} 
+  onPress={finalizarServico}
+  disabled={loading}
+>
+  <Text style={styles.confirmButtonText}>Confirmar</Text>
+</TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -308,6 +322,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 8,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default GateServicosScreen;

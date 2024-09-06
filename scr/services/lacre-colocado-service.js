@@ -16,9 +16,9 @@ export const uploadImagem = async (container, lacre, imagem) => {
     
     
     const options = {
-      url: `http://187.60.22.181:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
+      //url: `http://187.60.22.181:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
       //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
-      //url: `https://api.dpworldsantos.com/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
+      url: `https://api.dpworldsantos.com/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
       
       path: tempPath,
       method: 'POST',

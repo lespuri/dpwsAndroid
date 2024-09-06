@@ -19,7 +19,7 @@ export const apiLogin = async (method, url,user) => {
     const username = user.username;
     const password = user.password;    
     
-    const response = await axios.post(`${URL_QA_EXTERNO}/token`, {
+    const response = await axios.post(`${URL_PRODUCAO}/token`, {
       username,
       password,
       grant_type: 'password'
@@ -64,7 +64,7 @@ export const apiRequest = async (method, url, data = null) => {
 
   const config = {
     method: method,
-    url: `${URL_QA_EXTERNO}/${url}`,
+    url: `${URL_PRODUCAO}/${url}`,
     //url: `https://api.dpworldsantos.com/${url}`,
     headers: {
       'Authorization': `Bearer ${token}`,

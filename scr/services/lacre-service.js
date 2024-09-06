@@ -11,8 +11,7 @@ const fs = require('fs');
 
 export const buscarLacre = async (container) => {
   try {
-    //return  mockActionTfcConteinerInspecaoLacreResumoBuscar();
-    console.log("container", container);
+    //return  mockActionTfcConteinerInspecaoLacreResumoBuscar();    
     return await apiRequest('post', 'TfcConteinerInspecaoLacreResumo/Buscar', container);
   } catch (err) {
     console.error("Tem chance de dar erro no parse JSON.parse(err.response.data)", err.message);
@@ -53,9 +52,9 @@ export const uploadImagem = async (container, lacre, imagem) => {
     
     
     const options = {
-      url: `http://187.60.22.181:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
+      //url: `http://187.60.22.181:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
       //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
-      //url: `https://api.dpworldsantos.com/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
+      url: `https://api.dpworldsantos.com/TfcConteinerInspecaoLacre/Upload?id=${container.TFCCONTEINERINSPECAOID}&lacre=${lacre}`,
       
       path: tempPath,
       method: 'POST',

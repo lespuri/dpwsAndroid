@@ -59,9 +59,9 @@ const getAuthToken = async () => {
       await RNFS.copyFile(imagem.uri, tempPath);
   
       const options = {      
-      url: `http://187.60.22.181:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
+      //url: `http://187.60.22.181:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
       //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
-      //url: `https://api.dpworldsantos.com/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
+      url: `https://api.dpworldsantos.com/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
 
         path: tempPath,
         method: 'POST',

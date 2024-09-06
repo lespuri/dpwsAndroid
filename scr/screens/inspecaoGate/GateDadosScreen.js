@@ -27,6 +27,7 @@ const GateDadosScreen = () => {
   ];
 
   useEffect(() => {
+    console.log("Gate Dados Init > inspacao", inspecao)
     if (inspecao.tfcContainerInspecaoDto.LONGARINA) {
       const longarina = longarinaOptions.find(option => parseInt(option.id) === parseInt(inspecao.tfcContainerInspecaoDto.LONGARINAENUM));
       setLongarinaSelecionado(longarina || longarinaOptions[0]);
@@ -36,7 +37,7 @@ const GateDadosScreen = () => {
     //console.log("shouldNavigate");
     //console.log("shouldNavigate > valor", shouldNavigate);
     if (shouldNavigate) {
-      console.log("Gate Dados Navigate", inspecao.tfcContainerInspecaoDto);
+      console.log("Gate Dados Navigate", inspecao.tfcContainerInspecaoDto.FREIGHTKIND);
       navigation.replace('MenuInspecao', inspecao);
       setShouldNavigate(false); // Reseta o estado para evitar navegações repetidas
     }
@@ -56,7 +57,7 @@ const GateDadosScreen = () => {
       }
       
       const result = await editar(inspecao.tfcContainerInspecaoDto);
-      console.log("result", result);
+      //console.log("result", result);
       const updatedMenuL = inspecao.checklist.menuL.map(item => {
         if (item.page.includes("GateDados")) {
           return { ...item, isDadosPreenchidos: true }; // Altera o isDadosPreenchidos para true
@@ -65,15 +66,22 @@ const GateDadosScreen = () => {
       });
   
       setShouldNavigate(true);
-      
+      console.log("GateDados Befroe > ", inspecao.tfcContainerInspecaoDto.FREIGHTKIND);
       setInspecao(prevInspecao => ({
         ...prevInspecao,
         checklist: { 
           ...prevInspecao.checklist, 
           menuL: updatedMenuL 
         },
-        tfcContainerInspecaoDto:  result
-      }));      
+        tfcContainerInspecaoDto: { 
+          ...new TfcConteinerInspecaoDTO(), 
+          ...prevInspecao.tfcContainerInspecaoDto, // Mantém o estado anterior
+          ...result,
+          SIGLAMODALIDADE: prevInspecao.tfcContainerInspecaoDto.SIGLAMODALIDADE, // Mantém o valor de FREIGHTKIND
+          SIGLAFREIGHTKIND: prevInspecao.tfcContainerInspecaoDto.SIGLAFREIGHTKIND, // Mantém o valor de FREIGHTKIND
+          TRA: prevInspecao.tfcContainerInspecaoDto.TRA, // Mantém o valor de FREIGHTKIND
+        }
+      }));    
       
       
       //navigation.navigate('MenuInspecao', inspecao);

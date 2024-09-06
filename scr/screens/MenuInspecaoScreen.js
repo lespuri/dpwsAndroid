@@ -170,7 +170,7 @@ const MenuInspecaoScreen = () => {
         )}
         keyExtractor={(item, index) => index.toString()}
       />
-      <TouchableOpacity style={styles.finalizeButton} onPress={onValidarFinalizar}>
+      <TouchableOpacity disabled={loading} style={styles.finalizeButton} onPress={onValidarFinalizar}>
         <Text style={styles.finalizeButtonText}>Finalizar</Text>
         {loading ? <ActivityIndicator color="#fff" /> : <Icon name="check-circle" size={20} color="#fff" />}
       </TouchableOpacity>
