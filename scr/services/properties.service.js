@@ -38,18 +38,15 @@ export const _URL_PADRAO = "http://qa.embraportonline.com.br:8100/";
 //export const _URL_PADRAO = "http://www.embraportonline.com.br:8095/";
 //export const _URL_PADRAO = "http://dpws1sva506:8100/"
 
+//const URL_PADRAO = "https://api.dpworldsantos.com";
+//const URL_PADRAO = "http://qa.embraportonline.com.br:8100";
+const URL_PADRAO = "http://187.60.22.181:8100";
 
 
 export const _URL_CONFIG = [
-    // { "ambiente": "DEV", "url": "http://localhost:53965/" },
-    { "ambiente": "QA 8100", "url": "http://qa.embraportonline.com.br:8100/" }
-    // { "ambiente": "QA 8107", "url": "http://www.embraportonline.com.br:8107/" },
-    // { "ambiente": "PROD 8095", "url": "http://www.embraportonline.com.br:8095/" },
-    // { "ambiente": "PROD 8100", "url": "http://www.embraportonline.com.br:8100/" },
-    // { "ambiente": "PROD", "url": "http://sistemas.embraportonline.com.br:8100/" },
-    // { "ambiente": "PROD", "url": "http://api.embraport.net:8100/" },
-    // { "ambiente": "PROD", "url": "https://api.dpworldsantos.com/" },
-    // { "ambiente": "PROD EXT", "url": "https://api.dpworldsantos.com/" }
+    { "ambiente": "PROD", "url": "https://api.dpworldsantos.com" },
+    { "ambiente": "QA", "url": "http://qa.embraportonline.com.br:8100" },
+    { "ambiente": "QA EXTERNO", "url": "http://187.60.22.181:8100" }
 ];
 
 
