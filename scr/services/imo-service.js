@@ -1,4 +1,4 @@
-import { apiRequest } from './apiRequest-services';
+import { apiRequest, apiUploadImagem } from './apiRequest-services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import RNFS from 'react-native-fs';
@@ -51,45 +51,14 @@ const getAuthToken = async () => {
 
   export const uploadImagem = async (container, imo, imagem) => {
     try {
-      const token = await AsyncStorage.getItem("userToken");
-      console.log("container.TFCCONTEINERINSPECAOID",  container.TFCCONTEINERINSPECAOID);
-      console.log("imo.UN",  imo.UN);
-      // Copiando o arquivo de content:// para um local temporário
       const tempPath = `${RNFS.TemporaryDirectoryPath}/${Date.now()}.jpeg`;
       await RNFS.copyFile(imagem.uri, tempPath);
   
-      const options = {      
-      //url: `http://187.60.22.181:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
-      //url: `http://qa.embraportonline.com.br:8100/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
-      url: `https://api.dpworldsantos.com/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`,
-
-        path: tempPath,
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        field: 'file',
-        type: 'multipart',
-        notification: {
-          enabled: false, // Desabilita as notificações
-        }
-      };
-  
-      Upload.startUpload(options).then(uploadId => {
-        console.log('Upload started with id:', uploadId);
-  
-        Upload.addListener('error', uploadId, (data) => {
-          console.log("Error data");
-          console.log(data)
-        });
-  
-      }).catch(err => {
-        console.error('Upload error:', err);
-      });
+      return await apiUploadImagem(`/TfcConteinerInspecaoIMO/UploadByGate?id=${container.TFCCONTEINERINSPECAOID}&un=${imo.UN}`, tempPath);
     } catch (err) {
-      console.error('Error copying file or uploading:', err);
-    }
+      console.error("Tem chance de dar erro no parse JSON.parse(err.response.data)", err);
+      throw JSON.parse(err.response.data);
+    }           
   };
 
 

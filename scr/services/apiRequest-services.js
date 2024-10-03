@@ -1,9 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert } from 'react-native';
-const URL_PRODUCAO = "https://api.dpworldsantos.com";
-const URL_QA = "http://qa.embraportonline.com.br:8100";
-const URL_QA_EXTERNO = "http://187.60.22.181:8100";
+import Upload from 'react-native-background-upload';
+//const URL_PADRAO = "https://api.dpworldsantos.com";
+//const URL_PADRAO = "http://qa.embraportonline.com.br:8100";
+const URL_PADRAO = "http://187.60.22.181:8100";
 
 // Obtém o token de autenticação armazenado localmente
 const getAuthToken = async () => {
@@ -19,7 +20,7 @@ export const apiLogin = async (method, url,user) => {
     const username = user.username;
     const password = user.password;    
     
-    const response = await axios.post(`${URL_PRODUCAO}/token`, {
+    const response = await axios.post(`${URL_PADRAO}/token`, {
       username,
       password,
       grant_type: 'password'
@@ -64,7 +65,7 @@ export const apiRequest = async (method, url, data = null) => {
 
   const config = {
     method: method,
-    url: `${URL_PRODUCAO}/${url}`,
+    url: `${URL_PADRAO}/${url}`,
     //url: `https://api.dpworldsantos.com/${url}`,
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -97,3 +98,35 @@ export const apiRequest = async (method, url, data = null) => {
     
   }
 };
+
+export const apiUploadImagem = async (url, tempPath) => {
+  try {
+    const token = await AsyncStorage.getItem("userToken");    
+    
+    const options = {
+      url:URL_PADRAO + url,      
+      path: tempPath,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+      field: 'file',
+      type: 'multipart',
+    };
+
+    Upload.startUpload(options).then(uploadId => {
+      console.log('Upload started with id:', uploadId);
+
+      Upload.addListener('error', uploadId, (data) => {
+        console.log(`Error: ${data.error}`)
+      });
+
+    }).catch(err => {
+      console.error('Upload error:', err);
+    });
+  } catch (err) {
+    console.error('Error copying file or uploading:', err);
+  }
+};
+
