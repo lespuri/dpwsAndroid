@@ -19,7 +19,7 @@ const PesquisarContainerScreen = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    //setModelContainer('TEMU8341842');
+    setModelContainer('TEMU8341842');
     
   });
 

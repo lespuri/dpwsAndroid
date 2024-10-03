@@ -2,9 +2,10 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert } from 'react-native';
 import Upload from 'react-native-background-upload';
-//const URL_PADRAO = "https://api.dpworldsantos.com";
-//const URL_PADRAO = "http://qa.embraportonline.com.br:8100";
-const URL_PADRAO = "http://187.60.22.181:8100";
+import {_URL_CONFIG} from './properties.service';
+
+const ENV = "QA EXTERNO" ;
+const ENV_CONFIG = _URL_CONFIG.find(item => item.ambiente === ENV);
 
 // Obtém o token de autenticação armazenado localmente
 const getAuthToken = async () => {
@@ -19,8 +20,8 @@ export const apiLogin = async (method, url,user) => {
     
     const username = user.username;
     const password = user.password;    
-    
-    const response = await axios.post(`${URL_PADRAO}/token`, {
+    console.log(ENV_CONFIG);
+    const response = await axios.post(`${ENV_CONFIG.url}/token`, {
       username,
       password,
       grant_type: 'password'
@@ -65,7 +66,7 @@ export const apiRequest = async (method, url, data = null) => {
 
   const config = {
     method: method,
-    url: `${URL_PADRAO}/${url}`,
+    url: `${ENV_CONFIG.url}/${url}`,
     //url: `https://api.dpworldsantos.com/${url}`,
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -104,7 +105,7 @@ export const apiUploadImagem = async (url, tempPath) => {
     const token = await AsyncStorage.getItem("userToken");    
     
     const options = {
-      url:URL_PADRAO + url,      
+      url:ENV_CONFIG.url + url,      
       path: tempPath,
       method: 'POST',
       headers: {
