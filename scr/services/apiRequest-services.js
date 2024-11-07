@@ -4,7 +4,7 @@ import {Alert } from 'react-native';
 import Upload from 'react-native-background-upload';
 import {_URL_CONFIG} from './properties.service';
 
-const ENV = "QA EXTERNO" ;
+const ENV = "PROD" ;
 const ENV_CONFIG = _URL_CONFIG.find(item => item.ambiente === ENV);
 
 // Obtém o token de autenticação armazenado localmente
