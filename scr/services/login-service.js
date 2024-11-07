@@ -13,7 +13,7 @@ export const login = async (username, password) => {
 
     try {
         const response = await apiLogin('post', 'token', user);
-        console.log("response", response.data.access_token);
+        
         if (response && response.data.access_token) {
             await AsyncStorage.setItem('userToken', response.data.access_token);
             return response;

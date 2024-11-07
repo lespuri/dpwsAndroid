@@ -26,22 +26,6 @@ export const _AVARIA_PADRAO = "G:10";
  */
 export const _AVARIA_IGNORAR = "P:14";
 
-//export const _URL_PADRAO = "https://api.dpworldsantos.com/";
-export const _URL_PADRAO = "http://qa.embraportonline.com.br:8100/";
-//export const _URL_PADRAO = "http://apiinterna.dpworldsantos.com:8100/";
-//export const _URL_PADRAO = "http://www.embraportonline.com.br:8100/";
-//export const _URL_PADRAO = "http://emb1sv079.embraport.net:8100/";
-//export const _URL_PADRAO = "http://www.embraportonline.com.br:8095/";
-
-//export const _URL_PADRAO = "http://localhost:53965/";
-//export const _URL_PADRAO = "http://dpws1sva501:8100/";
-//export const _URL_PADRAO = "http://www.embraportonline.com.br:8095/";
-//export const _URL_PADRAO = "http://dpws1sva506:8100/"
-
-//const URL_PADRAO = "https://api.dpworldsantos.com";
-//const URL_PADRAO = "http://qa.embraportonline.com.br:8100";
-const URL_PADRAO = "http://187.60.22.181:8100";
-
 
 export const _URL_CONFIG = [
     { "ambiente": "PROD", "url": "https://api.dpworldsantos.com" },
